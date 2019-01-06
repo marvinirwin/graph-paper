@@ -1,0 +1,1429 @@
+[
+  {
+    "id": 24,
+    "vNestedSetsGraphs": [
+      {
+        "sourceId": "1",
+        "nodeId": "1",
+        "lft": "1",
+        "rgt": "62",
+        "id": 18566,
+        "lastModified": "2018-12-13T02:20:15.768Z",
+        "text": "#Golub, Philip S. East Asia's Reemergence. Polity, 2016.#\n",
+        "userId": "24",
+        "visible": true,
+        "vNestedSetsGraphMates": [
+          {
+            "sourceId": "1",
+            "nodeId": "163",
+            "lft": "3",
+            "rgt": "4",
+            "id": 18536,
+            "lastModified": "2018-12-13T02:20:15.768Z",
+            "text": "Pretty much.\n\nThe process of dividing an area into smaller segments called regions. One of the more obvious examples of regionalization is the division of a nation into states or provinces. Businesses also use regionalization as a management tool and a way to make certain that needs unique to particular areas are met.\n\nRead more: http://www.businessdictionary.com/definition/regionalization.html",
+            "userId": "24",
+            "visible": true,
+            "vNode": {
+              "id": 163,
+              "createdTimestamp": "2018-06-25T01:55:10.821Z",
+              "userId": "24",
+              "lastModified": "2018-12-13T02:20:15.768Z",
+              "visible": true,
+              "text": "Pretty much.\n\nThe process of dividing an area into smaller segments called regions. One of the more obvious examples of regionalization is the division of a nation into states or provinces. Businesses also use regionalization as a management tool and a way to make certain that needs unique to particular areas are met.\n\nRead more: http://www.businessdictionary.com/definition/regionalization.html",
+              "nodeRevisions": [
+                {
+                  "id": 244,
+                  "createdTimestamp": "2018-06-25T01:55:38.236Z",
+                  "text": "Pretty much.\n\nThe process of dividing an area into smaller segments called regions. One of the more obvious examples of regionalization is the division of a nation into states or provinces. Businesses also use regionalization as a management tool and a way to make certain that needs unique to particular areas are met.\n\nRead more: http://www.businessdictionary.com/definition/regionalization.html",
+                  "classification": "answer",
+                  "nodeId": "163",
+                  "visible": true
+                }
+              ],
+              "incomingVEdges": [
+                {
+                  "id": 152,
+                  "visible": true,
+                  "classification": null,
+                  "createdTimestamp": "2018-06-25T01:55:10.899Z",
+                  "n1": "162",
+                  "n2": "163",
+                  "text": null,
+                  "edgeRevisions": [
+                    {
+                      "id": 196,
+                      "createdTimestamp": "2018-06-25T01:55:10.899Z",
+                      "text": null,
+                      "classification": null,
+                      "edgeId": "152",
+                      "n1": "162",
+                      "n2": "163",
+                      "visible": true
+                    }
+                  ]
+                }
+              ],
+              "outgoingVEdges": []
+            }
+          },
+          {
+            "sourceId": "1",
+            "nodeId": "162",
+            "lft": "2",
+            "rgt": "5",
+            "id": 18537,
+            "lastModified": "2018-12-13T02:20:15.768Z",
+            "text": "Is regionalization just another word for division of labor? ",
+            "userId": "24",
+            "visible": true,
+            "vNode": {
+              "id": 162,
+              "createdTimestamp": "2018-06-25T01:54:55.647Z",
+              "userId": "24",
+              "lastModified": "2018-12-13T02:20:15.768Z",
+              "visible": true,
+              "text": "Is regionalization just another word for division of labor? ",
+              "nodeRevisions": [
+                {
+                  "id": 1155,
+                  "createdTimestamp": "2018-07-12T23:40:32.581Z",
+                  "text": "Is regionalization just another word for division of labor? ",
+                  "classification": "question",
+                  "nodeId": "162",
+                  "visible": true
+                }
+              ],
+              "incomingVEdges": [
+                {
+                  "id": 151,
+                  "visible": true,
+                  "classification": null,
+                  "createdTimestamp": "2018-06-25T01:54:55.715Z",
+                  "n1": "1",
+                  "n2": "162",
+                  "text": null,
+                  "edgeRevisions": [
+                    {
+                      "id": 194,
+                      "createdTimestamp": "2018-06-25T01:54:55.715Z",
+                      "text": null,
+                      "classification": null,
+                      "edgeId": "151",
+                      "n1": "1",
+                      "n2": "162",
+                      "visible": true
+                    }
+                  ]
+                }
+              ],
+              "outgoingVEdges": [
+                {
+                  "id": 152,
+                  "visible": true,
+                  "classification": null,
+                  "createdTimestamp": "2018-06-25T01:55:10.899Z",
+                  "n1": "162",
+                  "n2": "163",
+                  "text": null,
+                  "edgeRevisions": [
+                    {
+                      "id": 196,
+                      "createdTimestamp": "2018-06-25T01:55:10.899Z",
+                      "text": null,
+                      "classification": null,
+                      "edgeId": "152",
+                      "n1": "162",
+                      "n2": "163",
+                      "visible": true
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "sourceId": "1",
+            "nodeId": "160",
+            "lft": "6",
+            "rgt": "33",
+            "id": 18551,
+            "lastModified": "2018-12-13T02:20:15.768Z",
+            "text": "###### Moriguchi C., and Saez, E. (2008) The evolution of income concentration in Japan, 886-2005:  Evidence from income tax statistics.  The Review of Economics and Statistics, 90 (4): 713-34\n###### Economic policy changes Japan 1947 (Moriguci and Saez, 2008: 727)\n\n> First, the land reform in 1947-1950 mandated landlords to sell their farmland to tenants, eliminating virtually all large- and medium-sized landowners.  As a result, the percentage of land cultivated by tenants declined sharply from 46% in 1941 to 9% in 1955.  Due to hyperinflation , compensation paid to landowners in real terms was a mere fraction of the land value.  Second to finance large deficits, the government imposed [an] extremely heavy and highly progressive property tax (zaisan zei) from 1946 to 1951.  The property tax affected approximately 13 percent of all households in Japan in the initial year, and taxed away on average 33 percent of their properties.  For the top 5,000 households, more than 70 percent of their properties were transferred to the government.  Third, under the dissolution of zaibatsu in 1946-1948, not only were ex- and current directors of zaibatsu firms expelled, but also their stocks were confiscated and redistributed to a large number of employees and other investors at a market price.  Consequently, these three measures transferred a significant amount of assets (that is, land stocks and other household properties) from the higher to lower end of the distribution.",
+            "userId": "24",
+            "visible": true,
+            "vNode": {
+              "id": 160,
+              "createdTimestamp": "2018-06-25T01:50:47.557Z",
+              "userId": "24",
+              "lastModified": "2018-12-13T02:20:15.768Z",
+              "visible": true,
+              "text": "###### Moriguchi C., and Saez, E. (2008) The evolution of income concentration in Japan, 886-2005:  Evidence from income tax statistics.  The Review of Economics and Statistics, 90 (4): 713-34\n###### Economic policy changes Japan 1947 (Moriguci and Saez, 2008: 727)\n\n> First, the land reform in 1947-1950 mandated landlords to sell their farmland to tenants, eliminating virtually all large- and medium-sized landowners.  As a result, the percentage of land cultivated by tenants declined sharply from 46% in 1941 to 9% in 1955.  Due to hyperinflation , compensation paid to landowners in real terms was a mere fraction of the land value.  Second to finance large deficits, the government imposed [an] extremely heavy and highly progressive property tax (zaisan zei) from 1946 to 1951.  The property tax affected approximately 13 percent of all households in Japan in the initial year, and taxed away on average 33 percent of their properties.  For the top 5,000 households, more than 70 percent of their properties were transferred to the government.  Third, under the dissolution of zaibatsu in 1946-1948, not only were ex- and current directors of zaibatsu firms expelled, but also their stocks were confiscated and redistributed to a large number of employees and other investors at a market price.  Consequently, these three measures transferred a significant amount of assets (that is, land stocks and other household properties) from the higher to lower end of the distribution.",
+              "nodeRevisions": [
+                {
+                  "id": 1361,
+                  "createdTimestamp": "2018-07-13T00:57:24.559Z",
+                  "text": "###### Moriguchi C., and Saez, E. (2008) The evolution of income concentration in Japan, 886-2005:  Evidence from income tax statistics.  The Review of Economics and Statistics, 90 (4): 713-34\n###### Economic policy changes Japan 1947 (Moriguci and Saez, 2008: 727)\n\n> First, the land reform in 1947-1950 mandated landlords to sell their farmland to tenants, eliminating virtually all large- and medium-sized landowners.  As a result, the percentage of land cultivated by tenants declined sharply from 46% in 1941 to 9% in 1955.  Due to hyperinflation , compensation paid to landowners in real terms was a mere fraction of the land value.  Second to finance large deficits, the government imposed [an] extremely heavy and highly progressive property tax (zaisan zei) from 1946 to 1951.  The property tax affected approximately 13 percent of all households in Japan in the initial year, and taxed away on average 33 percent of their properties.  For the top 5,000 households, more than 70 percent of their properties were transferred to the government.  Third, under the dissolution of zaibatsu in 1946-1948, not only were ex- and current directors of zaibatsu firms expelled, but also their stocks were confiscated and redistributed to a large number of employees and other investors at a market price.  Consequently, these three measures transferred a significant amount of assets (that is, land stocks and other household properties) from the higher to lower end of the distribution.",
+                  "classification": "event",
+                  "nodeId": "160",
+                  "visible": true
+                }
+              ],
+              "incomingVEdges": [
+                {
+                  "id": 149,
+                  "visible": true,
+                  "classification": null,
+                  "createdTimestamp": "2018-06-25T01:50:47.645Z",
+                  "n1": "1",
+                  "n2": "160",
+                  "text": null,
+                  "edgeRevisions": [
+                    {
+                      "id": 190,
+                      "createdTimestamp": "2018-06-25T01:50:47.645Z",
+                      "text": null,
+                      "classification": null,
+                      "edgeId": "149",
+                      "n1": "1",
+                      "n2": "160",
+                      "visible": true
+                    }
+                  ]
+                }
+              ],
+              "outgoingVEdges": [
+                {
+                  "id": 264,
+                  "visible": true,
+                  "classification": "parent",
+                  "createdTimestamp": "2018-07-15T19:34:32.525Z",
+                  "n1": "160",
+                  "n2": "277",
+                  "text": null,
+                  "edgeRevisions": [
+                    {
+                      "id": 366,
+                      "createdTimestamp": "2018-07-15T19:34:32.525Z",
+                      "text": null,
+                      "classification": "parent",
+                      "edgeId": "264",
+                      "n1": "160",
+                      "n2": "277",
+                      "visible": true
+                    }
+                  ]
+                },
+                {
+                  "id": 265,
+                  "visible": true,
+                  "classification": "parent",
+                  "createdTimestamp": "2018-07-15T19:34:36.617Z",
+                  "n1": "160",
+                  "n2": "278",
+                  "text": null,
+                  "edgeRevisions": [
+                    {
+                      "id": 367,
+                      "createdTimestamp": "2018-07-15T19:34:36.617Z",
+                      "text": null,
+                      "classification": "parent",
+                      "edgeId": "265",
+                      "n1": "160",
+                      "n2": "278",
+                      "visible": true
+                    }
+                  ]
+                },
+                {
+                  "id": 266,
+                  "visible": true,
+                  "classification": "parent",
+                  "createdTimestamp": "2018-07-15T19:34:40.283Z",
+                  "n1": "160",
+                  "n2": "279",
+                  "text": null,
+                  "edgeRevisions": [
+                    {
+                      "id": 368,
+                      "createdTimestamp": "2018-07-15T19:34:40.283Z",
+                      "text": null,
+                      "classification": "parent",
+                      "edgeId": "266",
+                      "n1": "160",
+                      "n2": "279",
+                      "visible": true
+                    }
+                  ]
+                },
+                {
+                  "id": 267,
+                  "visible": true,
+                  "classification": "parent",
+                  "createdTimestamp": "2018-07-15T19:34:51.287Z",
+                  "n1": "160",
+                  "n2": "280",
+                  "text": null,
+                  "edgeRevisions": [
+                    {
+                      "id": 369,
+                      "createdTimestamp": "2018-07-15T19:34:51.287Z",
+                      "text": null,
+                      "classification": "parent",
+                      "edgeId": "267",
+                      "n1": "160",
+                      "n2": "280",
+                      "visible": true
+                    }
+                  ]
+                },
+                {
+                  "id": 268,
+                  "visible": true,
+                  "classification": "parent",
+                  "createdTimestamp": "2018-07-15T22:54:31.851Z",
+                  "n1": "160",
+                  "n2": "281",
+                  "text": null,
+                  "edgeRevisions": [
+                    {
+                      "id": 370,
+                      "createdTimestamp": "2018-07-15T22:54:31.851Z",
+                      "text": null,
+                      "classification": "parent",
+                      "edgeId": "268",
+                      "n1": "160",
+                      "n2": "281",
+                      "visible": true
+                    }
+                  ]
+                },
+                {
+                  "id": 269,
+                  "visible": true,
+                  "classification": "parent",
+                  "createdTimestamp": "2018-07-15T22:56:56.310Z",
+                  "n1": "160",
+                  "n2": "282",
+                  "text": null,
+                  "edgeRevisions": [
+                    {
+                      "id": 371,
+                      "createdTimestamp": "2018-07-15T22:56:56.310Z",
+                      "text": null,
+                      "classification": "parent",
+                      "edgeId": "269",
+                      "n1": "160",
+                      "n2": "282",
+                      "visible": true
+                    }
+                  ]
+                },
+                {
+                  "id": 270,
+                  "visible": true,
+                  "classification": "parent",
+                  "createdTimestamp": "2018-07-15T22:56:59.195Z",
+                  "n1": "160",
+                  "n2": "283",
+                  "text": null,
+                  "edgeRevisions": [
+                    {
+                      "id": 372,
+                      "createdTimestamp": "2018-07-15T22:56:59.195Z",
+                      "text": null,
+                      "classification": "parent",
+                      "edgeId": "270",
+                      "n1": "160",
+                      "n2": "283",
+                      "visible": true
+                    }
+                  ]
+                },
+                {
+                  "id": 271,
+                  "visible": true,
+                  "classification": "parent",
+                  "createdTimestamp": "2018-07-15T23:06:15.841Z",
+                  "n1": "160",
+                  "n2": "287",
+                  "text": null,
+                  "edgeRevisions": [
+                    {
+                      "id": 373,
+                      "createdTimestamp": "2018-07-15T23:06:15.841Z",
+                      "text": null,
+                      "classification": "parent",
+                      "edgeId": "271",
+                      "n1": "160",
+                      "n2": "287",
+                      "visible": true
+                    }
+                  ]
+                },
+                {
+                  "id": 272,
+                  "visible": true,
+                  "classification": "parent",
+                  "createdTimestamp": "2018-07-15T23:06:26.076Z",
+                  "n1": "160",
+                  "n2": "288",
+                  "text": null,
+                  "edgeRevisions": [
+                    {
+                      "id": 374,
+                      "createdTimestamp": "2018-07-15T23:06:26.076Z",
+                      "text": null,
+                      "classification": "parent",
+                      "edgeId": "272",
+                      "n1": "160",
+                      "n2": "288",
+                      "visible": true
+                    }
+                  ]
+                },
+                {
+                  "id": 273,
+                  "visible": true,
+                  "classification": "parent",
+                  "createdTimestamp": "2018-07-15T23:08:25.906Z",
+                  "n1": "160",
+                  "n2": "289",
+                  "text": null,
+                  "edgeRevisions": [
+                    {
+                      "id": 375,
+                      "createdTimestamp": "2018-07-15T23:08:25.906Z",
+                      "text": null,
+                      "classification": "parent",
+                      "edgeId": "273",
+                      "n1": "160",
+                      "n2": "289",
+                      "visible": true
+                    }
+                  ]
+                },
+                {
+                  "id": 274,
+                  "visible": true,
+                  "classification": "parent",
+                  "createdTimestamp": "2018-07-15T23:08:37.936Z",
+                  "n1": "160",
+                  "n2": "290",
+                  "text": null,
+                  "edgeRevisions": [
+                    {
+                      "id": 376,
+                      "createdTimestamp": "2018-07-15T23:08:37.936Z",
+                      "text": null,
+                      "classification": "parent",
+                      "edgeId": "274",
+                      "n1": "160",
+                      "n2": "290",
+                      "visible": true
+                    }
+                  ]
+                },
+                {
+                  "id": 275,
+                  "visible": true,
+                  "classification": "parent",
+                  "createdTimestamp": "2018-07-15T23:12:01.416Z",
+                  "n1": "160",
+                  "n2": "291",
+                  "text": null,
+                  "edgeRevisions": [
+                    {
+                      "id": 377,
+                      "createdTimestamp": "2018-07-15T23:12:01.416Z",
+                      "text": null,
+                      "classification": "parent",
+                      "edgeId": "275",
+                      "n1": "160",
+                      "n2": "291",
+                      "visible": true
+                    }
+                  ]
+                },
+                {
+                  "id": 276,
+                  "visible": true,
+                  "classification": "parent",
+                  "createdTimestamp": "2018-07-15T23:15:18.361Z",
+                  "n1": "160",
+                  "n2": "292",
+                  "text": null,
+                  "edgeRevisions": [
+                    {
+                      "id": 378,
+                      "createdTimestamp": "2018-07-15T23:15:18.361Z",
+                      "text": null,
+                      "classification": "parent",
+                      "edgeId": "276",
+                      "n1": "160",
+                      "n2": "292",
+                      "visible": true
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "sourceId": "1",
+            "nodeId": "168",
+            "lft": "35",
+            "rgt": "36",
+            "id": 18552,
+            "lastModified": "2018-12-13T02:20:15.768Z",
+            "text": "Wholly owned foreign enterprise",
+            "userId": "24",
+            "visible": true,
+            "vNode": {
+              "id": 168,
+              "createdTimestamp": "2018-06-25T01:56:41.407Z",
+              "userId": "24",
+              "lastModified": "2018-12-13T02:20:15.768Z",
+              "visible": true,
+              "text": "Wholly owned foreign enterprise",
+              "nodeRevisions": [
+                {
+                  "id": 255,
+                  "createdTimestamp": "2018-06-25T01:56:55.765Z",
+                  "text": "Wholly owned foreign enterprise",
+                  "classification": "answer",
+                  "nodeId": "168",
+                  "visible": true
+                }
+              ],
+              "incomingVEdges": [
+                {
+                  "id": 157,
+                  "visible": true,
+                  "classification": null,
+                  "createdTimestamp": "2018-06-25T01:56:41.496Z",
+                  "n1": "167",
+                  "n2": "168",
+                  "text": null,
+                  "edgeRevisions": [
+                    {
+                      "id": 206,
+                      "createdTimestamp": "2018-06-25T01:56:41.496Z",
+                      "text": null,
+                      "classification": null,
+                      "edgeId": "157",
+                      "n1": "167",
+                      "n2": "168",
+                      "visible": true
+                    }
+                  ]
+                }
+              ],
+              "outgoingVEdges": []
+            }
+          },
+          {
+            "sourceId": "1",
+            "nodeId": "167",
+            "lft": "34",
+            "rgt": "37",
+            "id": 18553,
+            "lastModified": "2018-12-13T02:20:15.768Z",
+            "text": "What is a WFOE",
+            "userId": "24",
+            "visible": true,
+            "vNode": {
+              "id": 167,
+              "createdTimestamp": "2018-06-25T01:56:29.637Z",
+              "userId": "24",
+              "lastModified": "2018-12-13T02:20:15.768Z",
+              "visible": true,
+              "text": "What is a WFOE",
+              "nodeRevisions": [
+                {
+                  "id": 2157,
+                  "createdTimestamp": "2018-07-21T20:27:44.597Z",
+                  "text": "What is a WFOE",
+                  "classification": "question",
+                  "nodeId": "167",
+                  "visible": true
+                }
+              ],
+              "incomingVEdges": [
+                {
+                  "id": 156,
+                  "visible": true,
+                  "classification": null,
+                  "createdTimestamp": "2018-06-25T01:56:29.702Z",
+                  "n1": "1",
+                  "n2": "167",
+                  "text": null,
+                  "edgeRevisions": [
+                    {
+                      "id": 204,
+                      "createdTimestamp": "2018-06-25T01:56:29.702Z",
+                      "text": null,
+                      "classification": null,
+                      "edgeId": "156",
+                      "n1": "1",
+                      "n2": "167",
+                      "visible": true
+                    }
+                  ]
+                }
+              ],
+              "outgoingVEdges": [
+                {
+                  "id": 157,
+                  "visible": true,
+                  "classification": null,
+                  "createdTimestamp": "2018-06-25T01:56:41.496Z",
+                  "n1": "167",
+                  "n2": "168",
+                  "text": null,
+                  "edgeRevisions": [
+                    {
+                      "id": 206,
+                      "createdTimestamp": "2018-06-25T01:56:41.496Z",
+                      "text": null,
+                      "classification": null,
+                      "edgeId": "157",
+                      "n1": "167",
+                      "n2": "168",
+                      "visible": true
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "sourceId": "1",
+            "nodeId": "684",
+            "lft": "40",
+            "rgt": "41",
+            "id": 18555,
+            "lastModified": "2018-12-13T02:20:15.768Z",
+            "text": null,
+            "userId": "24",
+            "visible": true,
+            "vNode": {
+              "id": 684,
+              "createdTimestamp": "2018-10-25T21:43:16.914Z",
+              "userId": "24",
+              "lastModified": "2018-12-13T02:20:15.768Z",
+              "visible": true,
+              "text": null,
+              "nodeRevisions": [
+                {
+                  "id": 6414,
+                  "createdTimestamp": "2018-10-25T21:43:16.985Z",
+                  "text": null,
+                  "classification": null,
+                  "nodeId": "684",
+                  "visible": true
+                }
+              ],
+              "incomingVEdges": [
+                {
+                  "id": 552,
+                  "visible": true,
+                  "classification": null,
+                  "createdTimestamp": "2018-10-25T21:43:17.231Z",
+                  "n1": "1",
+                  "n2": "684",
+                  "text": null,
+                  "edgeRevisions": [
+                    {
+                      "id": 649,
+                      "createdTimestamp": "2018-10-25T21:43:17.231Z",
+                      "text": null,
+                      "classification": null,
+                      "edgeId": "552",
+                      "n1": "1",
+                      "n2": "684",
+                      "visible": true
+                    }
+                  ]
+                }
+              ],
+              "outgoingVEdges": []
+            }
+          },
+          {
+            "sourceId": "1",
+            "nodeId": "170",
+            "lft": "42",
+            "rgt": "43",
+            "id": 18556,
+            "lastModified": "2018-12-13T02:20:15.768Z",
+            "text": "Oct 2014 China founds AAIB (Asian infrastructure investment bank) which has membership of all asian states except Japan, which has its Asian Development Bank (ADB)\n\nMarch 2013  Brazil, Russia, China, India and South Africa (BRICS) Set up New Development Bank (NDB) in Shanghai.\n",
+            "userId": "24",
+            "visible": true,
+            "vNode": {
+              "id": 170,
+              "createdTimestamp": "2018-06-25T01:57:12.680Z",
+              "userId": "24",
+              "lastModified": "2018-12-13T02:20:15.768Z",
+              "visible": true,
+              "text": "Oct 2014 China founds AAIB (Asian infrastructure investment bank) which has membership of all asian states except Japan, which has its Asian Development Bank (ADB)\n\nMarch 2013  Brazil, Russia, China, India and South Africa (BRICS) Set up New Development Bank (NDB) in Shanghai.\n",
+              "nodeRevisions": [
+                {
+                  "id": 259,
+                  "createdTimestamp": "2018-06-25T01:57:42.310Z",
+                  "text": "Oct 2014 China founds AAIB (Asian infrastructure investment bank) which has membership of all asian states except Japan, which has its Asian Development Bank (ADB)\n\nMarch 2013  Brazil, Russia, China, India and South Africa (BRICS) Set up New Development Bank (NDB) in Shanghai.\n",
+                  "classification": "event",
+                  "nodeId": "170",
+                  "visible": true
+                }
+              ],
+              "incomingVEdges": [
+                {
+                  "id": 159,
+                  "visible": true,
+                  "classification": null,
+                  "createdTimestamp": "2018-06-25T01:57:12.710Z",
+                  "n1": "1",
+                  "n2": "170",
+                  "text": null,
+                  "edgeRevisions": [
+                    {
+                      "id": 210,
+                      "createdTimestamp": "2018-06-25T01:57:12.710Z",
+                      "text": null,
+                      "classification": null,
+                      "edgeId": "159",
+                      "n1": "1",
+                      "n2": "170",
+                      "visible": true
+                    }
+                  ]
+                }
+              ],
+              "outgoingVEdges": []
+            }
+          },
+          {
+            "sourceId": "1",
+            "nodeId": "164",
+            "lft": "46",
+            "rgt": "47",
+            "id": 18558,
+            "lastModified": "2018-12-13T02:20:15.768Z",
+            "text": "Why did the US treasury veto the asian monetary fund?",
+            "userId": "24",
+            "visible": true,
+            "vNode": {
+              "id": 164,
+              "createdTimestamp": "2018-06-25T01:55:43.801Z",
+              "userId": "24",
+              "lastModified": "2018-12-13T02:20:15.768Z",
+              "visible": true,
+              "text": "Why did the US treasury veto the asian monetary fund?",
+              "nodeRevisions": [
+                {
+                  "id": 247,
+                  "createdTimestamp": "2018-06-25T01:56:05.448Z",
+                  "text": "Why did the US treasury veto the asian monetary fund?",
+                  "classification": "question",
+                  "nodeId": "164",
+                  "visible": true
+                }
+              ],
+              "incomingVEdges": [
+                {
+                  "id": 153,
+                  "visible": true,
+                  "classification": null,
+                  "createdTimestamp": "2018-06-25T01:55:43.864Z",
+                  "n1": "1",
+                  "n2": "164",
+                  "text": null,
+                  "edgeRevisions": [
+                    {
+                      "id": 198,
+                      "createdTimestamp": "2018-06-25T01:55:43.864Z",
+                      "text": null,
+                      "classification": null,
+                      "edgeId": "153",
+                      "n1": "1",
+                      "n2": "164",
+                      "visible": true
+                    }
+                  ]
+                }
+              ],
+              "outgoingVEdges": []
+            }
+          },
+          {
+            "sourceId": "1",
+            "nodeId": "676",
+            "lft": "48",
+            "rgt": "49",
+            "id": 18559,
+            "lastModified": "2018-12-13T02:20:15.768Z",
+            "text": null,
+            "userId": "24",
+            "visible": true,
+            "vNode": {
+              "id": 676,
+              "createdTimestamp": "2018-10-25T02:19:25.495Z",
+              "userId": "24",
+              "lastModified": "2018-12-13T02:20:15.768Z",
+              "visible": true,
+              "text": null,
+              "nodeRevisions": [
+                {
+                  "id": 6402,
+                  "createdTimestamp": "2018-10-25T02:19:25.519Z",
+                  "text": null,
+                  "classification": null,
+                  "nodeId": "676",
+                  "visible": true
+                }
+              ],
+              "incomingVEdges": [
+                {
+                  "id": 544,
+                  "visible": true,
+                  "classification": null,
+                  "createdTimestamp": "2018-10-25T02:19:25.653Z",
+                  "n1": "1",
+                  "n2": "676",
+                  "text": null,
+                  "edgeRevisions": [
+                    {
+                      "id": 641,
+                      "createdTimestamp": "2018-10-25T02:19:25.653Z",
+                      "text": null,
+                      "classification": null,
+                      "edgeId": "544",
+                      "n1": "1",
+                      "n2": "676",
+                      "visible": true
+                    }
+                  ]
+                }
+              ],
+              "outgoingVEdges": []
+            }
+          },
+          {
+            "sourceId": "1",
+            "nodeId": "674",
+            "lft": "51",
+            "rgt": "52",
+            "id": 18560,
+            "lastModified": "2018-12-13T02:20:15.768Z",
+            "text": null,
+            "userId": "24",
+            "visible": true,
+            "vNode": {
+              "id": 674,
+              "createdTimestamp": "2018-10-25T02:15:37.669Z",
+              "userId": "24",
+              "lastModified": "2018-12-13T02:20:15.768Z",
+              "visible": true,
+              "text": null,
+              "nodeRevisions": [
+                {
+                  "id": 6396,
+                  "createdTimestamp": "2018-10-25T02:15:37.741Z",
+                  "text": null,
+                  "classification": null,
+                  "nodeId": "674",
+                  "visible": true
+                }
+              ],
+              "incomingVEdges": [
+                {
+                  "id": 542,
+                  "visible": true,
+                  "classification": null,
+                  "createdTimestamp": "2018-10-25T02:15:37.891Z",
+                  "n1": "165",
+                  "n2": "674",
+                  "text": null,
+                  "edgeRevisions": [
+                    {
+                      "id": 639,
+                      "createdTimestamp": "2018-10-25T02:15:37.891Z",
+                      "text": null,
+                      "classification": null,
+                      "edgeId": "542",
+                      "n1": "165",
+                      "n2": "674",
+                      "visible": true
+                    }
+                  ]
+                }
+              ],
+              "outgoingVEdges": []
+            }
+          },
+          {
+            "sourceId": "1",
+            "nodeId": "165",
+            "lft": "50",
+            "rgt": "55",
+            "id": 18562,
+            "lastModified": "2018-12-13T02:20:15.768Z",
+            "text": "Q) What is an under-writer?\nA) Someone who evaluates and takes responsibility for risk on an investment, in return for the potential profits",
+            "userId": "24",
+            "visible": true,
+            "vNode": {
+              "id": 165,
+              "createdTimestamp": "2018-06-25T01:56:10.825Z",
+              "userId": "24",
+              "lastModified": "2018-12-13T02:20:15.768Z",
+              "visible": true,
+              "text": "Q) What is an under-writer?\nA) Someone who evaluates and takes responsibility for risk on an investment, in return for the potential profits",
+              "nodeRevisions": [
+                {
+                  "id": 3732,
+                  "createdTimestamp": "2018-09-18T17:38:41.701Z",
+                  "text": "Q) What is an under-writer?\nA) Someone who evaluates and takes responsibility for risk on an investment, in return for the potential profits",
+                  "classification": "",
+                  "nodeId": "165",
+                  "visible": true
+                }
+              ],
+              "incomingVEdges": [
+                {
+                  "id": 154,
+                  "visible": true,
+                  "classification": null,
+                  "createdTimestamp": "2018-06-25T01:56:10.896Z",
+                  "n1": "1",
+                  "n2": "165",
+                  "text": null,
+                  "edgeRevisions": [
+                    {
+                      "id": 200,
+                      "createdTimestamp": "2018-06-25T01:56:10.896Z",
+                      "text": null,
+                      "classification": null,
+                      "edgeId": "154",
+                      "n1": "1",
+                      "n2": "165",
+                      "visible": true
+                    }
+                  ]
+                }
+              ],
+              "outgoingVEdges": [
+                {
+                  "id": 155,
+                  "visible": true,
+                  "classification": null,
+                  "createdTimestamp": "2018-06-25T01:56:20.842Z",
+                  "n1": "165",
+                  "n2": "166",
+                  "text": null,
+                  "edgeRevisions": [
+                    {
+                      "id": 202,
+                      "createdTimestamp": "2018-06-25T01:56:20.842Z",
+                      "text": null,
+                      "classification": null,
+                      "edgeId": "155",
+                      "n1": "165",
+                      "n2": "166",
+                      "visible": true
+                    }
+                  ]
+                },
+                {
+                  "id": 542,
+                  "visible": true,
+                  "classification": null,
+                  "createdTimestamp": "2018-10-25T02:15:37.891Z",
+                  "n1": "165",
+                  "n2": "674",
+                  "text": null,
+                  "edgeRevisions": [
+                    {
+                      "id": 639,
+                      "createdTimestamp": "2018-10-25T02:15:37.891Z",
+                      "text": null,
+                      "classification": null,
+                      "edgeId": "542",
+                      "n1": "165",
+                      "n2": "674",
+                      "visible": true
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "sourceId": "1",
+            "nodeId": "161",
+            "lft": "56",
+            "rgt": "57",
+            "id": 18563,
+            "lastModified": "2018-12-13T02:20:15.768Z",
+            "text": "###### Foreign investment in China\n\nFEI - foreign invested enterprise\n\nThe growing importance of FDI since 199 is anomalous when compared to japan or the second wave industrializing nations (south korea, taiwan etc...)\n\nFIE account for 50% of exports in China, while only 12% of exports in South Korea.",
+            "userId": "24",
+            "visible": true,
+            "vNode": {
+              "id": 161,
+              "createdTimestamp": "2018-06-25T01:52:55.756Z",
+              "userId": "24",
+              "lastModified": "2018-12-13T02:20:15.768Z",
+              "visible": true,
+              "text": "###### Foreign investment in China\n\nFEI - foreign invested enterprise\n\nThe growing importance of FDI since 199 is anomalous when compared to japan or the second wave industrializing nations (south korea, taiwan etc...)\n\nFIE account for 50% of exports in China, while only 12% of exports in South Korea.",
+              "nodeRevisions": [
+                {
+                  "id": 1077,
+                  "createdTimestamp": "2018-07-12T23:22:34.671Z",
+                  "text": "###### Foreign investment in China\n\nFEI - foreign invested enterprise\n\nThe growing importance of FDI since 199 is anomalous when compared to japan or the second wave industrializing nations (south korea, taiwan etc...)\n\nFIE account for 50% of exports in China, while only 12% of exports in South Korea.",
+                  "classification": "statistics",
+                  "nodeId": "161",
+                  "visible": true
+                }
+              ],
+              "incomingVEdges": [
+                {
+                  "id": 150,
+                  "visible": true,
+                  "classification": null,
+                  "createdTimestamp": "2018-06-25T01:52:55.823Z",
+                  "n1": "1",
+                  "n2": "161",
+                  "text": null,
+                  "edgeRevisions": [
+                    {
+                      "id": 192,
+                      "createdTimestamp": "2018-06-25T01:52:55.823Z",
+                      "text": null,
+                      "classification": null,
+                      "edgeId": "150",
+                      "n1": "1",
+                      "n2": "161",
+                      "visible": true
+                    }
+                  ]
+                }
+              ],
+              "outgoingVEdges": []
+            }
+          },
+          {
+            "sourceId": "1",
+            "nodeId": "187",
+            "lft": "59",
+            "rgt": "60",
+            "id": 18564,
+            "lastModified": "2018-12-13T02:20:15.768Z",
+            "text": "Anti Imperialist conference attended by Most countries in Asia and Africa.  Though mostly concerned with Western colonialism, the Soviet Union was denounced as well.",
+            "userId": "24",
+            "visible": true,
+            "vNode": {
+              "id": 187,
+              "createdTimestamp": "2018-06-26T00:16:43.873Z",
+              "userId": "24",
+              "lastModified": "2018-12-13T02:20:15.768Z",
+              "visible": true,
+              "text": "Anti Imperialist conference attended by Most countries in Asia and Africa.  Though mostly concerned with Western colonialism, the Soviet Union was denounced as well.",
+              "nodeRevisions": [
+                {
+                  "id": 289,
+                  "createdTimestamp": "2018-06-26T00:43:51.038Z",
+                  "text": "Anti Imperialist conference attended by Most countries in Asia and Africa.  Though mostly concerned with Western colonialism, the Soviet Union was denounced as well.",
+                  "classification": "answer",
+                  "nodeId": "187",
+                  "visible": true
+                }
+              ],
+              "incomingVEdges": [
+                {
+                  "id": 176,
+                  "visible": true,
+                  "classification": null,
+                  "createdTimestamp": "2018-06-26T00:16:43.943Z",
+                  "n1": "169",
+                  "n2": "187",
+                  "text": null,
+                  "edgeRevisions": [
+                    {
+                      "id": 244,
+                      "createdTimestamp": "2018-06-26T00:16:43.943Z",
+                      "text": null,
+                      "classification": null,
+                      "edgeId": "176",
+                      "n1": "169",
+                      "n2": "187",
+                      "visible": true
+                    }
+                  ]
+                }
+              ],
+              "outgoingVEdges": []
+            }
+          },
+          {
+            "sourceId": "1",
+            "nodeId": "169",
+            "lft": "58",
+            "rgt": "61",
+            "id": 18565,
+            "lastModified": "2018-12-13T02:20:15.768Z",
+            "text": "What was the baldung conference (1945)?\n",
+            "userId": "24",
+            "visible": true,
+            "vNode": {
+              "id": 169,
+              "createdTimestamp": "2018-06-25T01:57:11.935Z",
+              "userId": "24",
+              "lastModified": "2018-12-13T02:20:15.768Z",
+              "visible": true,
+              "text": "What was the baldung conference (1945)?\n",
+              "nodeRevisions": [
+                {
+                  "id": 287,
+                  "createdTimestamp": "2018-06-26T00:16:41.896Z",
+                  "text": "What was the baldung conference (1945)?\n",
+                  "classification": "question",
+                  "nodeId": "169",
+                  "visible": true
+                }
+              ],
+              "incomingVEdges": [
+                {
+                  "id": 158,
+                  "visible": true,
+                  "classification": null,
+                  "createdTimestamp": "2018-06-25T01:57:11.997Z",
+                  "n1": "1",
+                  "n2": "169",
+                  "text": null,
+                  "edgeRevisions": [
+                    {
+                      "id": 208,
+                      "createdTimestamp": "2018-06-25T01:57:11.997Z",
+                      "text": null,
+                      "classification": null,
+                      "edgeId": "158",
+                      "n1": "1",
+                      "n2": "169",
+                      "visible": true
+                    }
+                  ]
+                }
+              ],
+              "outgoingVEdges": [
+                {
+                  "id": 176,
+                  "visible": true,
+                  "classification": null,
+                  "createdTimestamp": "2018-06-26T00:16:43.943Z",
+                  "n1": "169",
+                  "n2": "187",
+                  "text": null,
+                  "edgeRevisions": [
+                    {
+                      "id": 244,
+                      "createdTimestamp": "2018-06-26T00:16:43.943Z",
+                      "text": null,
+                      "classification": null,
+                      "edgeId": "176",
+                      "n1": "169",
+                      "n2": "187",
+                      "visible": true
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "sourceId": "1",
+            "nodeId": "1",
+            "lft": "1",
+            "rgt": "62",
+            "id": 18566,
+            "lastModified": "2018-12-13T02:20:15.768Z",
+            "text": "#Golub, Philip S. East Asia's Reemergence. Polity, 2016.#\n",
+            "userId": "24",
+            "visible": true,
+            "vNode": {
+              "id": 1,
+              "createdTimestamp": "2018-06-23T14:20:04.835Z",
+              "userId": "24",
+              "lastModified": "2018-12-13T02:20:15.768Z",
+              "visible": true,
+              "text": "#Golub, Philip S. East Asia's Reemergence. Polity, 2016.#\n",
+              "nodeRevisions": [
+                {
+                  "id": 7694,
+                  "createdTimestamp": "2018-12-13T02:20:15.768Z",
+                  "text": "#Golub, Philip S. East Asia's Reemergence. Polity, 2016.#\n",
+                  "classification": "book",
+                  "nodeId": "1",
+                  "visible": true
+                }
+              ],
+              "incomingVEdges": [],
+              "outgoingVEdges": [
+                {
+                  "id": 149,
+                  "visible": true,
+                  "classification": null,
+                  "createdTimestamp": "2018-06-25T01:50:47.645Z",
+                  "n1": "1",
+                  "n2": "160",
+                  "text": null,
+                  "edgeRevisions": [
+                    {
+                      "id": 190,
+                      "createdTimestamp": "2018-06-25T01:50:47.645Z",
+                      "text": null,
+                      "classification": null,
+                      "edgeId": "149",
+                      "n1": "1",
+                      "n2": "160",
+                      "visible": true
+                    }
+                  ]
+                },
+                {
+                  "id": 150,
+                  "visible": true,
+                  "classification": null,
+                  "createdTimestamp": "2018-06-25T01:52:55.823Z",
+                  "n1": "1",
+                  "n2": "161",
+                  "text": null,
+                  "edgeRevisions": [
+                    {
+                      "id": 192,
+                      "createdTimestamp": "2018-06-25T01:52:55.823Z",
+                      "text": null,
+                      "classification": null,
+                      "edgeId": "150",
+                      "n1": "1",
+                      "n2": "161",
+                      "visible": true
+                    }
+                  ]
+                },
+                {
+                  "id": 151,
+                  "visible": true,
+                  "classification": null,
+                  "createdTimestamp": "2018-06-25T01:54:55.715Z",
+                  "n1": "1",
+                  "n2": "162",
+                  "text": null,
+                  "edgeRevisions": [
+                    {
+                      "id": 194,
+                      "createdTimestamp": "2018-06-25T01:54:55.715Z",
+                      "text": null,
+                      "classification": null,
+                      "edgeId": "151",
+                      "n1": "1",
+                      "n2": "162",
+                      "visible": true
+                    }
+                  ]
+                },
+                {
+                  "id": 153,
+                  "visible": true,
+                  "classification": null,
+                  "createdTimestamp": "2018-06-25T01:55:43.864Z",
+                  "n1": "1",
+                  "n2": "164",
+                  "text": null,
+                  "edgeRevisions": [
+                    {
+                      "id": 198,
+                      "createdTimestamp": "2018-06-25T01:55:43.864Z",
+                      "text": null,
+                      "classification": null,
+                      "edgeId": "153",
+                      "n1": "1",
+                      "n2": "164",
+                      "visible": true
+                    }
+                  ]
+                },
+                {
+                  "id": 154,
+                  "visible": true,
+                  "classification": null,
+                  "createdTimestamp": "2018-06-25T01:56:10.896Z",
+                  "n1": "1",
+                  "n2": "165",
+                  "text": null,
+                  "edgeRevisions": [
+                    {
+                      "id": 200,
+                      "createdTimestamp": "2018-06-25T01:56:10.896Z",
+                      "text": null,
+                      "classification": null,
+                      "edgeId": "154",
+                      "n1": "1",
+                      "n2": "165",
+                      "visible": true
+                    }
+                  ]
+                },
+                {
+                  "id": 156,
+                  "visible": true,
+                  "classification": null,
+                  "createdTimestamp": "2018-06-25T01:56:29.702Z",
+                  "n1": "1",
+                  "n2": "167",
+                  "text": null,
+                  "edgeRevisions": [
+                    {
+                      "id": 204,
+                      "createdTimestamp": "2018-06-25T01:56:29.702Z",
+                      "text": null,
+                      "classification": null,
+                      "edgeId": "156",
+                      "n1": "1",
+                      "n2": "167",
+                      "visible": true
+                    }
+                  ]
+                },
+                {
+                  "id": 158,
+                  "visible": true,
+                  "classification": null,
+                  "createdTimestamp": "2018-06-25T01:57:11.997Z",
+                  "n1": "1",
+                  "n2": "169",
+                  "text": null,
+                  "edgeRevisions": [
+                    {
+                      "id": 208,
+                      "createdTimestamp": "2018-06-25T01:57:11.997Z",
+                      "text": null,
+                      "classification": null,
+                      "edgeId": "158",
+                      "n1": "1",
+                      "n2": "169",
+                      "visible": true
+                    }
+                  ]
+                },
+                {
+                  "id": 159,
+                  "visible": true,
+                  "classification": null,
+                  "createdTimestamp": "2018-06-25T01:57:12.710Z",
+                  "n1": "1",
+                  "n2": "170",
+                  "text": null,
+                  "edgeRevisions": [
+                    {
+                      "id": 210,
+                      "createdTimestamp": "2018-06-25T01:57:12.710Z",
+                      "text": null,
+                      "classification": null,
+                      "edgeId": "159",
+                      "n1": "1",
+                      "n2": "170",
+                      "visible": true
+                    }
+                  ]
+                },
+                {
+                  "id": 160,
+                  "visible": true,
+                  "classification": null,
+                  "createdTimestamp": "2018-06-25T01:57:44.808Z",
+                  "n1": "1",
+                  "n2": "171",
+                  "text": null,
+                  "edgeRevisions": [
+                    {
+                      "id": 212,
+                      "createdTimestamp": "2018-06-25T01:57:44.808Z",
+                      "text": null,
+                      "classification": null,
+                      "edgeId": "160",
+                      "n1": "1",
+                      "n2": "171",
+                      "visible": true
+                    }
+                  ]
+                },
+                {
+                  "id": 280,
+                  "visible": true,
+                  "classification": "parent",
+                  "createdTimestamp": "2018-07-21T15:49:13.808Z",
+                  "n1": "1",
+                  "n2": "302",
+                  "text": null,
+                  "edgeRevisions": [
+                    {
+                      "id": 381,
+                      "createdTimestamp": "2018-07-21T15:49:13.808Z",
+                      "text": null,
+                      "classification": "parent",
+                      "edgeId": "280",
+                      "n1": "1",
+                      "n2": "302",
+                      "visible": true
+                    }
+                  ]
+                },
+                {
+                  "id": 544,
+                  "visible": true,
+                  "classification": null,
+                  "createdTimestamp": "2018-10-25T02:19:25.653Z",
+                  "n1": "1",
+                  "n2": "676",
+                  "text": null,
+                  "edgeRevisions": [
+                    {
+                      "id": 641,
+                      "createdTimestamp": "2018-10-25T02:19:25.653Z",
+                      "text": null,
+                      "classification": null,
+                      "edgeId": "544",
+                      "n1": "1",
+                      "n2": "676",
+                      "visible": true
+                    }
+                  ]
+                },
+                {
+                  "id": 552,
+                  "visible": true,
+                  "classification": null,
+                  "createdTimestamp": "2018-10-25T21:43:17.231Z",
+                  "n1": "1",
+                  "n2": "684",
+                  "text": null,
+                  "edgeRevisions": [
+                    {
+                      "id": 649,
+                      "createdTimestamp": "2018-10-25T21:43:17.231Z",
+                      "text": null,
+                      "classification": null,
+                      "edgeId": "552",
+                      "n1": "1",
+                      "n2": "684",
+                      "visible": true
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        ]
+      }
+    ]
+  }
+]
