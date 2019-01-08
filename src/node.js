@@ -1,9 +1,10 @@
 import {uniqBy, uniqueId} from 'lodash';
+import {BehaviorSubject} from "rxjs";
 
-export const NodeVerticalMargin = 40;
-export const NodeHorizontalMargin = 20;
-export const NodeWidth = 120;
-export const NodeHeight = 40;
+export const NodeVerticalMargin = 80;
+export const NodeHorizontalMargin = 80;
+export const NodeWidth = 240;
+export const NodeHeight = 80;
 
 /**
  * @param root {DrawTree}
@@ -29,18 +30,17 @@ export class Node {
     }
 
     constructor(o) {
-        /**
-         * {Node}
-         */
-        this.parent = o.parent;
-        /**
-         * {Node[]}
-         */
-        this.children = o.children || [];
+        Object.assign(this, o);
         /**
          * {string}
          */
-        this.text = o.text;
+        this.text = o.text || '';
+        this.text = this.text.replace(/#/g, '');
+        this.lines = this.text.split('\n');
+        this.title = this.lines.length ? this.lines[0] : this.text;
+        this.selected$ = new BehaviorSubject(false);
+        // implement max character limit for title
+
     }
 }
 
@@ -53,9 +53,9 @@ export class Node {
 export function ConstructGraphFromResults(o) {
     const firstNode = o[0].vNestedSetsGraphs[0];
     const allTheRestNodes = firstNode.vNestedSetsGraphMates.map(o => o.vNode);
-    const allNodes = allTheRestNodes.concat(firstNode);
+    const allNodes = allTheRestNodes.concat(firstNode).map( n => new Node(n));
     const allEdgesDuplicates = [];
-    [firstNode, ...allTheRestNodes].forEach(n => {
+    allNodes.forEach(n => {
         n.children = [];
         if (n.incomingVEdges) {
             allEdgesDuplicates.push(...n.incomingVEdges)
@@ -84,6 +84,10 @@ export function ConstructGraphFromResults(o) {
 
 export class DrawTree {
     constructor(tree, parent = undefined, depth = 0, number = 1) {
+        this.text = tree.text;
+        this.lines = tree.lines;
+        this.title = tree.title;
+
         this.x = -1.;
         this.y = depth;
         this.tree = tree;
@@ -156,9 +160,6 @@ export class DrawTree {
         /*        lmost_sibling = property(get_lmost_sibling)*/
     }
 }
-
-/*    __str__(self): return "%s: x=%s mod=%s" % (self.tree, self.x, self.mod)
-    __repr__(self): return self.__str__()*/
 
 export function buchheim(tree) {
     const dt = firstwalk(new DrawTree(tree));
@@ -272,13 +273,6 @@ function execute_shifts(v) {
     })
 }
 
-/*    for w in v.children[::-1]:
-        print "shift:", w, shift, w.change
-        w.x += shift
-        w.mod += shift
-        change += w.change
-        shift += w.shift + change}*/
-
 function ancestor(vil, v, default_ancestor) {
     //the relevant text is at the bottom of page 7 of
     //"Improving Walker's Algorithm to Run in Linear Time" by Buchheim et al, (2002)
@@ -304,21 +298,6 @@ function second_walk(v, m = 0, depth = 0, min = undefined) {
 
     return min
 }
-
-/**
- *
- * @param vil  {DrawTree}
- * @param v{DrawTree}
- * @param default_ancestor{DrawTree}
- * @returns {DrawTree}
- */
-/*export function ancestor(vil, v, default_ancestor) {
-    if (v.parent.children.indexOf(vil.ancestor) !== -1) {
-        return vil.ancestor;
-    } else {
-        return default_ancestor;
-    }
-}*/
 
 
 

@@ -1,5 +1,14 @@
 <template>
     <div id="app">
+        <div>
+            <div id="editor-container">
+                <!--            <div id="toolbar" ref="toolbar">
+
+                            </div>
+                            <div id="editor" ref="editor">
+                            </div>-->
+            </div>
+        </div>
         <div id="tree-container" ref="treeContainer">
             <node v-for="node in positionedDrawTreeElements$" :node="node">
             </node>
@@ -10,6 +19,24 @@
 <script>
     const testData = require('./testdata');
     import NodeComponent from './components/node';
+    import Quill from 'quill/core';
+    import Toolbar from 'quill/modules/toolbar';
+    import Snow from 'quill/themes/snow';
+
+    import Bold from 'quill/formats/bold';
+    import Italic from 'quill/formats/italic';
+    import Header from 'quill/formats/header';
+
+
+    Quill.register({
+        'modules/toolbar': Toolbar,
+        'themes/snow': Snow,
+        'formats/bold': Bold,
+        'formats/italic': Italic,
+        'formats/header': Header
+    });
+    ;
+
     import {
         buchheim,
         ConstructGraphFromResults, DrawTree,
@@ -31,31 +58,60 @@
             Node: NodeComponent
         },
         subscriptions() {
-            const nodes$= new BehaviorSubject(ConstructGraphFromResults(testData));
+            const nodes$ = new BehaviorSubject(ConstructGraphFromResults(testData));
             const drawTree$ = nodes$.pipe(map(nodes => {
+                nodes.map(n => n.selected$.subscribe(selected => {
+                    if (selected) {
+                        editingNode$.next(n);
+                    }
+                }));
                 const root = nodes.find(n => !n.parent);
-/*                if (!root.children.length) {
-                    debugger;console.log();
-                }*/
                 return buchheim(new DrawTree(root));
             }));
             const positionedDrawTreeElements$ = drawTree$.pipe(map(drawTree => {
-                console.log(drawTree.children.find(c => c.children.length > 0));
                 return drawTree.allGraph().map(d => {
                     d.pixelX = (NodeWidth + (NodeHorizontalMargin / 2)) * d.x;
-                    d.pixelY = (NodeHeight + (NodeHorizontalMargin / 2)) * d.y;
+                    d.pixelY = (NodeHeight + (NodeVerticalMargin / 2)) * d.y;
                     return d;
                 });
             }));
+            /**
+             * @type {BehaviorSubject<Node>}
+             */
+            const editingNode$ = new BehaviorSubject(undefined);
+            /**
+             * @type {BehaviorSubject<Quill>}
+             */
+            const editor$ = new BehaviorSubject(undefined);
+            editingNode$.subscribe(e => {
+                if (e) {
+                    if (!editor$.getValue()) {
+                        const editor = new Quill('#editor-container', {
+                            modules: {
+                                toolbar: [
+                                    [{header: [1, 2, false]}],
+                                    ['bold', 'italic', 'underline'],
+                                    ['image', 'code-block']
+                                ],
+                            },
+                            theme: 'snow',
+                            placeholder: 'Compose an epic...',
+                        });
+                        editor$.next(editor);
+                    }
+                }
+            });
+            setTimeout(() => editingNode$.next(nodes$.getValue()[0]));
             return {
                 nodes$,
                 drawTree$,
-                positionedDrawTreeElements$
+                positionedDrawTreeElements$,
+                editingNode$,
+                editor$
             }
         },
         data() {
-            return {
-            }
+            return {}
         },
         mounted() {
             // Ok now let's layout our results
@@ -64,6 +120,7 @@
 </script>
 
 <style>
+    @import "~quill/dist/quill.core.css"
     @import url(https://fonts.googleapis.com/css?family=Source+Code+Pro);
 
     body {
@@ -86,21 +143,17 @@
         display: flex;
         align-items: center;
         flex-flow: column nowrap;
-        line-height: 40px;
-        font-size: 30px;
+        line-height: 20px;
+        font-size: 20px;
         border-style: solid;
         border-width: 1px;
-        min-width: 120px;
-        max-width: 120px;
-        min-height: 40px;
-        max-height: 40px;
+        min-width: 240px;
+        max-width: 240px;
+        min-height: 80px;
+        max-height: 80px;
+    }
+    #editor-container {
+/*        height: 375px;*/
     }
 
-    .title {
-    }
-
-    .children {
-        margin-top: 40px;
-
-    }
 </style>

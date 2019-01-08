@@ -1,6 +1,6 @@
 <template>
     <div class="node" :style="computedStyle">
-        {{node.uuid}}
+        {{node.title}}
     </div>
 </template>
 
