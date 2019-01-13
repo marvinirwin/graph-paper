@@ -1,16 +1,32 @@
 <template>
     <div id="app">
-        <div>
-            <div id="editor-container">
-                <!--            <div id="toolbar" ref="toolbar">
+        <quill-editor
+                style="
+                    position: fixed;
+                    width: 50vw;
+                    background-color: white;
+                    z-index: 100;"
+                ref="myQuillEditor"
+                v-model="content"
+                @change="handleEditorChange"
+        >
+        </quill-editor>
+        <!--        <div>
+                    <div id="editor-container">
+                        &lt;!&ndash;            <div id="toolbar" ref="toolbar">
 
-                            </div>
-                            <div id="editor" ref="editor">
-                            </div>-->
-            </div>
-        </div>
+                                    </div>
+                                    <div id="editor" ref="editor">
+                                    </div>&ndash;&gt;
+                    </div>
+                </div>-->
         <div id="tree-container" ref="treeContainer">
-            <node v-for="node in positionedDrawTreeElements$" :node="node">
+            <node v-for="drawTree in positionedDrawTreeElements$"
+                  :node="drawTree.node.tree"
+                  :drawTree="drawTree"
+                  :key="drawTree.uuid"
+                  @click="handleNodeClick(drawTree.node.tree)"
+            >
             </node>
         </div>
     </div>
@@ -19,23 +35,14 @@
 <script>
     const testData = require('./testdata');
     import NodeComponent from './components/node';
-    import Quill from 'quill/core';
-    import Toolbar from 'quill/modules/toolbar';
-    import Snow from 'quill/themes/snow';
 
-    import Bold from 'quill/formats/bold';
-    import Italic from 'quill/formats/italic';
-    import Header from 'quill/formats/header';
+    import 'quill/dist/quill.core.css'
+    import 'quill/dist/quill.snow.css'
+    import 'quill/dist/quill.bubble.css'
 
+    import {VueQuillEditor} from 'vue-quill-editor'
 
-    Quill.register({
-        'modules/toolbar': Toolbar,
-        'themes/snow': Snow,
-        'formats/bold': Bold,
-        'formats/italic': Italic,
-        'formats/header': Header
-    });
-    ;
+    import {lex, WordNode} from './persian-lexer';
 
     import {
         buchheim,
@@ -48,23 +55,36 @@
         NodeWidth,
         Point
     } from './node';
-    import {flatten} from 'lodash';
-    import {BehaviorSubject} from 'rxjs';
-    import {map} from 'rxjs/operators';
+    import {flatten, debounce} from 'lodash';
+    import {BehaviorSubject, merge} from 'rxjs';
+    import {map, pluck} from 'rxjs/operators';
 
     export default {
         name: 'app',
         components: {
-            Node: NodeComponent
+            Node: NodeComponent,
+            VueQuillEditor
+        },
+        data() {
+            return {content: ''};
         },
         subscriptions() {
+            const vue = this;
+            const rootPersianLexerNode = new Node({text: 'دشتی'});
             const nodes$ = new BehaviorSubject(ConstructGraphFromResults(testData));
-            const drawTree$ = nodes$.pipe(map(nodes => {
-                nodes.map(n => n.selected$.subscribe(selected => {
-                    if (selected) {
-                        editingNode$.next(n);
+            const sanitizedNodes$ = nodes$.pipe(map(nodes => {
+                    // Add the lexer node(s)
+                    const root = nodes.find(n => !n.parent);
+                    if (root.children.indexOf(rootPersianLexerNode) === -1) {
+                        root.children.push(rootPersianLexerNode);
+                        rootPersianLexerNode.parent = root;
                     }
+                    if (nodes.indexOf(rootPersianLexerNode) === -1) {
+                        nodes.push(rootPersianLexerNode);
+                    }
+                    return nodes;
                 }));
+            const drawTree$ = sanitizedNodes$.pipe(map(nodes => {
                 const root = nodes.find(n => !n.parent);
                 return buchheim(new DrawTree(root));
             }));
@@ -83,44 +103,57 @@
              * @type {BehaviorSubject<Quill>}
              */
             const editor$ = new BehaviorSubject(undefined);
-            editingNode$.subscribe(e => {
-                if (e) {
-                    if (!editor$.getValue()) {
-                        const editor = new Quill('#editor-container', {
-                            modules: {
-                                toolbar: [
-                                    [{header: [1, 2, false]}],
-                                    ['bold', 'italic', 'underline'],
-                                    ['image', 'code-block']
-                                ],
-                            },
-                            theme: 'snow',
-                            placeholder: 'Compose an epic...',
-                        });
-                        editor$.next(editor);
-                    }
+            const editingText$ = this.$watchAsObservable('content').pipe(pluck('newValue'));
+            editingText$.subscribe(str => {
+                const editing = editingNode$.getValue();
+                if (editing) {
+                    editing.text = str.replace(/<(?:.|\n)*?>/gm, '');
+                    editing.computeTitle();
                 }
             });
-            setTimeout(() => editingNode$.next(nodes$.getValue()[0]));
+            // Add the tree recalculation for the language node(s)
+            editingText$.subscribe(() => {
+                const editing = editingNode$.getValue();
+                if (editing === rootPersianLexerNode) {
+                    let wordNode = new WordNode(editing.text, '');
+                    lex(wordNode);
+                    wordNode = wordNode.ConvertToNode();
+                    editing.children = [wordNode];
+                    nodes$.next(nodes$.getValue());
+                }
+            });
+            // Change content if there is a new node
+            editingNode$.subscribe(n => {
+                if (n) {
+                    this.content = n.text;
+                }
+            });
             return {
                 nodes$,
                 drawTree$,
                 positionedDrawTreeElements$,
                 editingNode$,
-                editor$
+                editor$,
+                editingText$
             }
         },
-        data() {
-            return {}
+        methods: {
+            handleNodeClick(node) {
+                this.$observables.editingNode$.next(node);
+            },
+            handleEditorChange({text}) {
+            }
         },
         mounted() {
             // Ok now let's layout our results
+        },
+        computed: {
         }
     }
 </script>
 
 <style>
-    @import "~quill/dist/quill.core.css"
+    @import "~quill/dist/quill.core.css";
     @import url(https://fonts.googleapis.com/css?family=Source+Code+Pro);
 
     body {
@@ -130,7 +163,7 @@
         margin: 0;
     }
 
-    #tree-container, .children {
+    #tree-container{
         display: flex;
         flex-flow: row nowrap;
         justify-content: center;
@@ -152,8 +185,9 @@
         min-height: 80px;
         max-height: 80px;
     }
-    #editor-container {
-/*        height: 375px;*/
+    .node:hover {
+        cursor: pointer;
     }
+
 
 </style>

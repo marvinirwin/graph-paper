@@ -1,5 +1,5 @@
 import {uniqBy, uniqueId} from 'lodash';
-import {BehaviorSubject} from "rxjs";
+// import {BehaviorSubject} from "rxjs";
 
 export const NodeVerticalMargin = 80;
 export const NodeHorizontalMargin = 80;
@@ -36,11 +36,15 @@ export class Node {
          */
         this.text = o.text || '';
         this.text = this.text.replace(/#/g, '');
+        this.uuid = uniqueId();
+        this.computeTitle();
+        this.children = this.children || [];
+        // implement max character limit for title
+    }
+    computeTitle() {
         this.lines = this.text.split('\n');
         this.title = this.lines.length ? this.lines[0] : this.text;
-        this.selected$ = new BehaviorSubject(false);
-        // implement max character limit for title
-
+        this.title = this.title.substring(0, 90);
     }
 }
 
@@ -81,12 +85,14 @@ export function ConstructGraphFromResults(o) {
 }
 
 // I stole this all from https://llimllib.github.io/pymag-trees/
+// I need to find a way to combine drawTree and node
+// Compute the drawTree and then assign nodes?
+// I can't do this because drawTree calculation is linked to node parents/children
+// All nodes will be drawTrees eventually
 
 export class DrawTree {
     constructor(tree, parent = undefined, depth = 0, number = 1) {
-        this.text = tree.text;
-        this.lines = tree.lines;
-        this.title = tree.title;
+        this.node = tree;
 
         this.x = -1.;
         this.y = depth;
@@ -105,6 +111,7 @@ export class DrawTree {
         this._lmost_sibling = undefined;
         //this is the number of the node in its group of siblings 1..n
         this.number = number;
+
         this.uuid = uniqueId();
         this.pixelX = 0;
         this.pixelY = 0;
