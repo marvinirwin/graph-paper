@@ -42,7 +42,7 @@
 
     import {VueQuillEditor} from 'vue-quill-editor'
 
-    import {lex, WordNode} from './persian-lexer';
+    import {lex, WordNode, lexers} from './persian-lexer';
 
     import {
         buchheim,
@@ -116,8 +116,15 @@
                 const editing = editingNode$.getValue();
                 if (editing === rootPersianLexerNode) {
                     let wordNode = new WordNode(editing.text, '');
-                    lex(wordNode);
+                    let wordNodeChildren = wordNode.value.split(' ');
+                    if (wordNodeChildren.length) {
+                        wordNode.children = wordNodeChildren.map(str => new WordNode(str, ''))
+                        wordNode.children.map(c => lex(c, lexers))
+                    } else {
+                        lex(wordNode, lexers);
+                    }
                     wordNode = wordNode.ConvertToNode();
+
                     editing.children = [wordNode];
                     nodes$.next(nodes$.getValue());
                 }
