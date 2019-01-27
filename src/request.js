@@ -31,7 +31,7 @@ export default class RequestManager {
      * @type {VNestedSetsGraphSourceNode[]}
      */
     const result = await axios.get(UrlSources, {params: {filter: {where: {text: {neq: ''}, visible: true}}}});
-    result.data.forEach(sanitizeNestedSet)
+    result.data.forEach(sanitizeNestedSet);
     return result.data;
   }
 

@@ -84,11 +84,14 @@
       return {content: ''};
     },
     subscriptions() {
+      let root;
       const rootPersianLexerNode = new Node({text: 'دشتی'});
-      const nodes$ = new BehaviorSubject(ConstructGraphFromNodesAndEdges(testData));
+      const nodes$ = new BehaviorSubject([]);
 /*      const nodes$ = new BehaviorSubject(ConstructGraphFromNodesAndEdges());*/
       const sanitizedNodes$ = nodes$.pipe(map(nodes => {
+
         // Add the lexer node(s)
+/*
         const root = nodes.find(n => !n.parent);
         if (root.children.indexOf(rootPersianLexerNode) === -1) {
           root.children.push(rootPersianLexerNode);
@@ -108,6 +111,7 @@
           n.x = undefined;
           n.y = undefined;
         });
+*/
 
         let i = 0;
         // For each node with a nodeId === sourceId traverse the children and assign a color
@@ -123,10 +127,14 @@
       }));
       const drawTree$ = sanitizedNodes$.pipe(map(nodes => {
         const root = nodes.find(n => !n.parent);
-        return buchheim(new DrawTree(root));
+        if (root) {
+          return buchheim(new DrawTree(root));
+        } else {
+          return undefined;
+        }
       }));
       const positionedDrawTreeElements$ = drawTree$.pipe(map(drawTree => {
-        return drawTree.allGraph().map(d => {
+        return drawTree && drawTree.allGraph().map(d => {
           d.pixelX = (NodeWidth + (NodeHorizontalMargin / 2)) * d.x;
           d.pixelY = (NodeHeight + (NodeVerticalMargin / 2)) * d.y;
           return d;
@@ -212,12 +220,12 @@
         n.children = results;
         results.map(r => r.parent = n);
 
-        const r1 = (await r.fetchNodesBelow(601)).map(rFunc);
+        /*const r1 = (await r.fetchNodesBelow(601)).map(rFunc);
         const r2 = (await r.fetchNodesBelow(659)).map(rFunc);
         const f1 = results.find(r => r.nodeId === 601);
         const f2 = results.find(r => r.nodeId === 659);
         results = mergeLoadedSetsIntoTree(results, r1, f1);
-        results = mergeLoadedSetsIntoTree(results, r2, f2);
+        results = mergeLoadedSetsIntoTree(results, r2, f2);*/
 
         this.$observables.nodes$.next(results.concat(n));
       })();
@@ -238,9 +246,9 @@
     }
 
     #tree-container {
-        display: flex;
+/*        display: flex;
         flex-flow: row nowrap;
-        justify-content: center;
+        justify-content: center;*/
         position: relative;
     }
 

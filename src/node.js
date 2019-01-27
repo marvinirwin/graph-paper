@@ -19,12 +19,8 @@ export class Point {
 }
 
 function test(v) {
-  const text = v.tree.node.text;
+/*  const text = v.tree.node.text;
 
-/*  if (text.includes('Minimum')) {
-    debugger;console.log();
-
-  }*/
 console.log(v.x);
     if (
       v.x === 41.5 ||
@@ -32,7 +28,7 @@ console.log(v.x);
       v.tree.node.x === 41.5
     ) {
       debugger;console.log();
-    }
+    }*/
   }
 
 export class Node {
