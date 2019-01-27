@@ -16,60 +16,102 @@
       drawTree: Object,
     },
     data() {
-      return {
-        computedStyle: ''
+      const vue = this;
+      const o = {
+        computedStyle: '',
       };
-    },
-    mounted() {
+
+      const color = this.node.color || this.drawTree.color;
+
+      // If we're alreadyPlaced, check out previous pixelX and pixelY to see if we must move
+      if (this.node.alreadyPlaced) {
+        o.computedStyle = `
+        transition: all 1s;
+        left: ${this.node.previousPixelX}px;
+        top: ${this.node.previousPixelY}px;
+        color: ${color};
+        `;
+        setTimeout(() => {
+          const startX = vue.node.previousPixelX;
+          const destX = vue.drawTree.pixelX;
+          const startY = vue.node.previousPixelY;
+          const destY = vue.drawTree.pixelY;
+          let transformX = destX - startX;
+          let transformY = destY - startY;
+          if (vue.node.text.includes('email')) {
+            debugger;
+            console.log();
+          }
+
+          this.computedStyle = `
+        transition: all 1s;
+        left: ${vue.node.previousPixelX}px;
+        top: ${vue.node.previousPixelY}px;
+        color: ${color};
+        transform: translate(${transformX}px, ${transformY}px);
+        `;
+        }, 0);
+        return o;
+      }
+
       let x, y;
       if (!this.drawTree.parent) {
         x = this.drawTree.pixelX;
         y = this.drawTree.pixelY;
       } else {
-        x = this.findRoot().pixelX;
-        y = this.findRoot().pixelY;
+        x = this.drawTree.parent.pixelX;
+        y = this.drawTree.parent.pixelY;
       }
-      debugger;
-      const color = this.node.color || this.drawTree.color;
-      this.computedStyle = `
-        transition: all 3s;
+
+      // If we haven't been placed, have us start inside of our parent
+      o.computedStyle = `
+        transition: all 1s;
         left: ${x}px;
         top: ${y}px;
-        color: ${color};`;
+        color: ${color};
+        transform: translate(
+        ${x}px,
+        ${y}px);
+        `;
 
       setTimeout(() => {
-        const color = this.node.color || this.drawTree.color;
         this.computedStyle = `
-        transition: all 3s;
+        transition: all 1s;
         left: ${x}px;
         top: ${y}px;
         transform: translate(${this.drawTree.pixelX - x}px, ${this.drawTree.pixelY - y}px);
         color: ${color};
           `;
-      }, 500)
-/*      this.$refs.root.style.transfor[m = `translate(${this.targetX - this.x}px,${this.targetY - this.y}px)`;*/
-/*      setTimeout(() => {
-        this.$refs.root.style.transform = "translate(100px, 100px);";
-      }, 200);*/
+      }, 0);
+      return o;
+    },
+    mounted() {
 
     },
     computed: {
-/*      computedStyle() {
-/!*        const x = this.drawTree.pixelX;
-        const y = this.drawTree.pixelY;*!/
+      /*      computedStyle() {
+      /!*        const x = this.drawTree.pixelX;
+              const y = this.drawTree.pixelY;*!/
 
 
-      },*/
+            },*/
     },
     methods: {
       findRoot() {
         const f = (n) => {
-          return !n.parent ? n : f(n.parent)
+          return !n.parent ? n : f(n.parent);
         };
         return f(this.drawTree);
       },
       setTransform() {
 
+      },
+    },
+    watch: {
+      computedStyle(v){
+        if (this.node.text.includes('email')) {
+          console.log(v);
+        }
       }
     },
   };

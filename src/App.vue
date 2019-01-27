@@ -58,18 +58,19 @@
     Point, depthFirst, mergeLoadedSetsIntoTree,
   } from './node';
   import {flatten, debounce} from 'lodash';
-  import {BehaviorSubject, merge} from 'rxjs';
+  import {BehaviorSubject, merge, from} from 'rxjs';
   import {map, pluck} from 'rxjs/operators';
 
   const colorWheel = [
     'blue',
     'red',
     'green',
-    'purple'
+    'purple',
   ];
+
   function getColorWheelColor(i) {
     i = i > colorWheel.length - 1 ? 0 : i;
-    return {index: i + 1, color: colorWheel[i]}
+    return {index: i + 1, color: colorWheel[i]};
   }
 
   const r = new Request();
@@ -84,34 +85,35 @@
       return {content: ''};
     },
     subscriptions() {
+      const vue = this;
       let root;
       const rootPersianLexerNode = new Node({text: 'دشتی'});
       const nodes$ = new BehaviorSubject([]);
-/*      const nodes$ = new BehaviorSubject(ConstructGraphFromNodesAndEdges());*/
+      /*      const nodes$ = new BehaviorSubject(ConstructGraphFromNodesAndEdges());*/
       const sanitizedNodes$ = nodes$.pipe(map(nodes => {
 
         // Add the lexer node(s)
-/*
-        const root = nodes.find(n => !n.parent);
-        if (root.children.indexOf(rootPersianLexerNode) === -1) {
-          root.children.push(rootPersianLexerNode);
-          rootPersianLexerNode.parent = root;
-        }
-        if (nodes.indexOf(rootPersianLexerNode) === -1) {
-          nodes.push(rootPersianLexerNode);
-        }
-        // Reset all bucheim members, TODO figure out if I have to do this
-        nodes.forEach(n => {
-          n._lmost_sibling = undefined;
-          n.ancestor = undefined;
-          n.change = undefined;
-          n.mod = undefined;
-          n.shift = undefined;
-          n.thread = undefined;
-          n.x = undefined;
-          n.y = undefined;
-        });
-*/
+        /*
+                const root = nodes.find(n => !n.parent);
+                if (root.children.indexOf(rootPersianLexerNode) === -1) {
+                  root.children.push(rootPersianLexerNode);
+                  rootPersianLexerNode.parent = root;
+                }
+                if (nodes.indexOf(rootPersianLexerNode) === -1) {
+                  nodes.push(rootPersianLexerNode);
+                }
+                // Reset all bucheim members, TODO figure out if I have to do this
+                nodes.forEach(n => {
+                  n._lmost_sibling = undefined;
+                  n.ancestor = undefined;
+                  n.change = undefined;
+                  n.mod = undefined;
+                  n.shift = undefined;
+                  n.thread = undefined;
+                  n.x = undefined;
+                  n.y = undefined;
+                });
+        */
 
         let i = 0;
         // For each node with a nodeId === sourceId traverse the children and assign a color
@@ -125,7 +127,7 @@
           });
         return nodes;
       }));
-      const drawTree$ = sanitizedNodes$.pipe(map(nodes => {
+      const drawTree$ =  sanitizedNodes$.pipe(map(nodes => {
         const root = nodes.find(n => !n.parent);
         if (root) {
           return buchheim(new DrawTree(root));
@@ -183,12 +185,23 @@
       // Attempt to fetch children if node has no children
       editingNode$.subscribe(n => {
         if (!n) return;
+        const next = results => {
+          const els = vue.positionedDrawTreeElements$;
+          const setTree = t => {
+            t.node.node.alreadyPlaced = true;
+            t.node.node.previousPixelX = t.pixelX;
+            t.node.node.previousPixelY = t.pixelY;
+/*            t.children.forEach(setTree);*/
+          };
+          els.map(setTree);
+/*          setTree(tree);*/
+
+          results = results.map(o => new Node(o));
+          const mergedNodes = mergeLoadedSetsIntoTree(this.$observables.nodes$.getValue(), results, n);
+          this.$observables.nodes$.next(mergedNodes);
+        };
         r.fetchNodesBelow(n.id || n.nodeId)
-          .then(results => {
-            results = results.map(o => new Node(o));
-            const mergedNodes =  mergeLoadedSetsIntoTree(this.$observables.nodes$.getValue(),results, n);
-            this.$observables.nodes$.next(mergedNodes);
-          })
+          .then(next);
       });
       return {
         nodes$,
@@ -246,9 +259,9 @@
     }
 
     #tree-container {
-/*        display: flex;
-        flex-flow: row nowrap;
-        justify-content: center;*/
+        /*        display: flex;
+                flex-flow: row nowrap;
+                justify-content: center;*/
         position: relative;
     }
 
@@ -271,8 +284,6 @@
     .node:hover {
         cursor: pointer;
     }
-
-
 
 
 </style>
