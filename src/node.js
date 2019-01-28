@@ -165,31 +165,32 @@ export function ConstructGraphFromNodesAndEdges(o) {
  * @returns {VNestedSetsGraph[]}
  */
 export function createChildrenFromSetOfVNestedSetsGraph(parent, sets) {
+  debugger;
   //@tsignore
   parent.children = parent.children || [];
-  if (parent.rgt - parent.lft === 1) {
+/*  if (parent.rgt - parent.lft === 1) {
     // We have no children, so exit
-    return;
-  }
+    return parent.rgt + 1;
+  }*/
 
   let pos = parent.lft + 1;
-  while (pos !== parent.rgt) {
+  while (pos < parent.rgt) {
     // Ok we do have children
     // Find the one with the lft of us + 1
     const g = sets.find(s => s.lft === pos);
     if (!g) {
-      pos++;
-      continue;
+      debugger;
+      throw new Error('Sets are invalid!');
     }
     //@tsignore
     parent.children.push(g);
     g.parent = parent;
 
-    createChildrenFromSetOfVNestedSetsGraph(g, sets);
+    pos = createChildrenFromSetOfVNestedSetsGraph(g, sets);
     /*    if (g.rgt - g.lft > 1) {
         }*/
-    pos++;
   }
+  return pos + 1;
 }
 
 /**
@@ -204,9 +205,8 @@ export function mergeLoadedSetsIntoTree(originalNodes, newNodes, parentNode) {
   createChildrenFromSetOfVNestedSetsGraph(parentNode, newNodes);
 /*  parentNode.children = rootGraph.children;*/
 /*  parentNode.children.forEach(g => g.parent = parentNode);*/
-  const newNestedSets = newNodes.filter(r => r.nodeId !== rootGraph.nodeId);
   // TODO figure out of I have to reset their positions when I recalculate
-  return originalNodes.concat(...newNestedSets);
+  return originalNodes.concat(...newNodes);
 }
 
 // I stole this all from https://llimllib.github.io/pymag-trees/

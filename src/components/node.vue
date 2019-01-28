@@ -117,7 +117,6 @@
     watch: {
       computedStyle(v){
         if (this.node.text.includes('email')) {
-          console.log(v);
         }
       }
     },

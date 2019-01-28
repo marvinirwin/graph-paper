@@ -90,19 +90,19 @@
    * @param endY
    */
   async function moveNode(n, startX, startY, endX, endY) {
-    console.log([startX, startY, endX, endY]);
     if (startX === undefined) {
       debugger;
-      throw new Error('Cannot move to undefined position!')
+      throw new Error('Cannot move to undefined position!');
     }
     // First make sure the node here
     if (movingNodes[n]) {
-      debugger;console.log('Node is being moved twice!');
+      debugger;
+      console.log('Node is being moved twice!');
     }
 
     // First make sure the node is where want it
     const newCss = n.beAtPosition(startX, startY);
-/*    console.log(newCss);*/
+    /*    console.log(newCss);*/
     n.reposition$.next(newCss);
     await sleep(0);
     const newGoToCss = n.goToPosition(startX, startY, endX, endY);
@@ -115,10 +115,9 @@
    * @param n {Node}
    */
   async function positionNode(n, x, y) {
-    console.log([x, y]);
-    if ([x, y].find(v => v=== undefined)) {
+    if ([x, y].find(v => v === undefined)) {
       debugger;
-      throw new Error('Cannot move to undefined position!')
+      throw new Error('Cannot move to undefined position!');
     }
     n.reposition$.next(n.beAtPosition(x, y));
     await sleep(0);
@@ -194,21 +193,21 @@
           const startY = drawTree.node.node.pixelY;
           // Position all nodes inside of the drawTree
           if (n.previousPixelX === undefined) {
-/*            if (n.text.includes('Javascript')) {
-              debugger;
-              console.log();
-            }*/
-positionNode(n, startX, startY);
-/*            n.reposition$.next(d.node.node.beAtPosition(startX, startY));*/
+            /*            if (n.text.includes('Javascript')) {
+                          debugger;
+                          console.log();
+                        }*/
+            positionNode(n, startX, startY);
+            /*            n.reposition$.next(d.node.node.beAtPosition(startX, startY));*/
 
             // Then have them move to their proper position, should I use setTimeout or nextTick?
             setTimeout(() => {
-/*              if (n.text.includes('Javascript')) {
-                debugger;
-                console.log();
-              }*/
-moveNode(n, startX, startY, n.pixelX, n.pixelY);
-/*              n.reposition$.next(n.goToPosition(startX, startY, n.pixelX, n.pixelY));*/
+              /*              if (n.text.includes('Javascript')) {
+                              debugger;
+                              console.log();
+                            }*/
+              moveNode(n, startX, startY, n.pixelX, n.pixelY);
+              /*              n.reposition$.next(n.goToPosition(startX, startY, n.pixelX, n.pixelY));*/
               /*              setTimeout(() => n.reposition$.next(n.beAtPosition(n.pixelX, n.pixelY)), 3500);*/
             }, 500);
           }
@@ -285,37 +284,40 @@ moveNode(n, startX, startY, n.pixelX, n.pixelY);
             newNode.previousPixelX = 1;
             return newNode;
           });
-          const mergedNodes = mergeLoadedSetsIntoTree(originalNodes, results, n);
+          debugger;
+          const mergedNodes = mergeLoadedSetsIntoTree(originalNodes, results.filter(r => r.nodeId !== n.nodeId), n);
 
           this.$observables.nodes$.next(mergedNodes);
-
 
           // what happens if I position the original nodes here?
           // All nodes which are not new travel to their new positions
           originalNodes.forEach(n => {
-            moveNode(n,n.previousPixelX, n.previousPixelY, n.pixelX, n.pixelY)
+            moveNode(n, n.previousPixelX, n.previousPixelY, n.pixelX, n.pixelY);
           });
 
 
-
-          // Each child of the expandee is told to move in the same was as the expandee
-          expandee.children.forEach(
-            n => moveNode(n, expandee.previousPixelX, expandee.previousPixelY, expandee.pixelX, expandee.pixelY));
+          // Each child of the expandee is told to move in the same way as the expandee
+          expandee.children.forEach( n => moveNode(n, expandee.previousPixelX, expandee.previousPixelY, expandee.pixelX, expandee.pixelY));
 
           /**
            * @param expandee {Node}
            */
-          function move(expandee) {
+          function move(expandee, depth) {
             setTimeout(() => {
-              debugger;
+              if (depth > 1) {
+                debugger;console.log();
+              }
+              console.log(`${expandee.title} --- ${depth}`);
               moveNode(expandee, expandee.parent.pixelX, expandee.parent.pixelY, expandee.pixelX, expandee.pixelY);
-              expandee.children.forEach(move);
+              expandee.children.forEach(c => {
+                move(c, depth + 1);
+              });
             }, 1000);
           }
 
           // One second later all immediate children of the expandee are told to move
           // to their proper spots.  All children of the latter nodes move in the same way
-          expandee.children.forEach(move);
+          expandee.children.forEach(c => move(c, 1));
 
           return;
 
