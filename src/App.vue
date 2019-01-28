@@ -1,10 +1,11 @@
 <template>
     <div id="app">
         <quill-editor
+                v-if="editingNode$"
                 style="
-                display: none;
                     position: fixed;
-                    width: 50vw;
+                    width: 100vw;
+                    height: 100vh;
                     background-color: white;
                     z-index: 100;"
                 ref="myQuillEditor"
@@ -228,7 +229,6 @@
       editingText$.subscribe(str => {
         const editing = editingNode$.getValue();
         if (editing) {
-          debugger;
           editing.text = str.replace(/<(?:.|\n)*?>/gm, '');
           editing.computeTitle();
         }
@@ -341,6 +341,12 @@
       },
     },
     mounted() {
+      window.addEventListener('keydown', (e) => {
+        switch(e.key) {
+          case "Escape":
+            this.$observables.editingNode$.next(undefined);
+        }
+      });
       (async () => {
         function rFunc(r) {
           r.children = [];
