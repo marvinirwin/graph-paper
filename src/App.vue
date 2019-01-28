@@ -262,6 +262,9 @@
           /**
            * @type {Node}
            */
+          if (n.children && n.children.length) {
+            return;
+          }
           const expandee = n;
           const els = vue.positionedDrawTreeElements$;
           const setTree = t => {
@@ -284,7 +287,6 @@
             newNode.previousPixelX = 1;
             return newNode;
           });
-          debugger;
           const mergedNodes = mergeLoadedSetsIntoTree(originalNodes, results.filter(r => r.nodeId !== n.nodeId), n);
 
           this.$observables.nodes$.next(mergedNodes);
@@ -304,10 +306,6 @@
            */
           function move(expandee, depth) {
             setTimeout(() => {
-              if (depth > 1) {
-                debugger;console.log();
-              }
-              console.log(`${expandee.title} --- ${depth}`);
               moveNode(expandee, expandee.parent.pixelX, expandee.parent.pixelY, expandee.pixelX, expandee.pixelY);
               expandee.children.forEach(c => {
                 move(c, depth + 1);

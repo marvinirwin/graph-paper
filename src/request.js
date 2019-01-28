@@ -43,7 +43,7 @@ export default class RequestManager {
     /**
      * @type {VNestedSetsGraph[]}
      */
-    const result = await axios.get(UrlGraphs, {params: {filter: {where: {sourceId: nodeId, text: {neq: ''}}}}});
+    const result = await axios.get(UrlGraphs, {params: {filter: {where: {sourceId: nodeId,}}}});
     result.data.forEach(sanitizeNestedSet);
     return result.data;
   }
