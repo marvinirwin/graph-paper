@@ -27,7 +27,8 @@
                   :node="drawTree.node.tree"
                   :drawTree="drawTree"
                   :key="drawTree.uuid"
-                  @click="handleNodeClick(drawTree.node.tree)"
+                  @click.exact="loadNodeChildren(drawTree.node.tree)"
+                  @click.shift="$observables.editingNode$.next(drawTree.node.tree)"
             >
             </node>
         </div>
@@ -189,8 +190,8 @@
       const positionedDrawTreeElements$ = drawTree$.pipe(map(drawTree => {
         return drawTree && drawTree.allGraph().map(d => {
           const n = d.node.node;
-          n.pixelX = (NodeWidth + (NodeHorizontalMargin / 2)) * d.x;
-          n.pixelY = (NodeHeight + (NodeVerticalMargin / 2)) * d.y;
+          n.pixelX = ((NodeWidth + (NodeHorizontalMargin / 2)) * d.x);
+          n.pixelY = ((NodeHeight + (NodeVerticalMargin / 2)) * d.y) - NodeHeight;
           const startX = drawTree.node.node.pixelX;
           const startY = drawTree.node.node.pixelY;
           // Position all nodes inside of the drawTree
@@ -259,8 +260,24 @@
       });
       // Attempt to fetch children if node has no children
       editingNode$.subscribe(n => {
-        if (!n) return;
-        if (n.children.length) return;
+
+      });
+      return {
+        nodes$,
+        drawTree$,
+        positionedDrawTreeElements$,
+        editingNode$,
+        editor$,
+        editingText$,
+      };
+    },
+    methods: {
+      handleNodeClick(node) {
+        this.$observables.editingNode$.next(node);
+      },
+      handleEditorChange({text}) {
+      },
+      loadNodeChildren(n) {
         const next = async results => {
           /**
            * @type {Node}
@@ -269,7 +286,7 @@
             return;
           }
           const expandee = n;
-          const els = vue.positionedDrawTreeElements$;
+          const els = this.positionedDrawTreeElements$;
           const setTree = t => {
             const tnode = t.node.node;
             tnode.alreadyPlaced = true;
@@ -323,22 +340,7 @@
         };
         r.fetchNodesBelow(n.id || n.nodeId)
           .then(next);
-      });
-      return {
-        nodes$,
-        drawTree$,
-        positionedDrawTreeElements$,
-        editingNode$,
-        editor$,
-        editingText$,
-      };
-    },
-    methods: {
-      handleNodeClick(node) {
-        this.$observables.editingNode$.next(node);
-      },
-      handleEditorChange({text}) {
-      },
+      }
     },
     mounted() {
       window.addEventListener('keydown', (e) => {
@@ -369,13 +371,15 @@
 
 <style>
     @import "~quill/dist/quill.core.css";
-    @import url(https://fonts.googleapis.com/css?family=Source+Code+Pro);
+    @import url(https://fonts.googleapis.com/css?family=Inconsolata);
 
     body {
         background-size: 40px 40px;
         background-image: linear-gradient(to right, rgb(136, 199, 201) 1px, transparent 1px), linear-gradient(to bottom, rgb(136, 199, 201) 1px, transparent 1px);
         box-shadow: 0 1px 2px rgba(0, 0, 0, 0.07);
         margin: 0;
+        font-family: monospace;
+    ;
     }
 
     #tree-container {

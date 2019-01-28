@@ -72,7 +72,7 @@ export class Node {
   computeTitle() {
     this.lines = this.text.split('\n');
     this.title = this.lines.length ? this.lines[0] : this.text;
-    this.title = this.title.substring(0, 90);
+    this.title = this.title.substring(0, 50);
   }
 
   /**
