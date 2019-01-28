@@ -165,7 +165,6 @@ export function ConstructGraphFromNodesAndEdges(o) {
  * @returns {VNestedSetsGraph[]}
  */
 export function createChildrenFromSetOfVNestedSetsGraph(parent, sets) {
-  debugger;
   //@tsignore
   parent.children = parent.children || [];
 /*  if (parent.rgt - parent.lft === 1) {

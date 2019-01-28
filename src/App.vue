@@ -142,27 +142,28 @@
       const sanitizedNodes$ = nodes$.pipe(map(nodes => {
 
         // Add the lexer node(s)
-        /*
-                const root = nodes.find(n => !n.parent);
-                if (root.children.indexOf(rootPersianLexerNode) === -1) {
-                  root.children.push(rootPersianLexerNode);
-                  rootPersianLexerNode.parent = root;
-                }
-                if (nodes.indexOf(rootPersianLexerNode) === -1) {
-                  nodes.push(rootPersianLexerNode);
-                }
-                // Reset all bucheim members, TODO figure out if I have to do this
-                nodes.forEach(n => {
-                  n._lmost_sibling = undefined;
-                  n.ancestor = undefined;
-                  n.change = undefined;
-                  n.mod = undefined;
-                  n.shift = undefined;
-                  n.thread = undefined;
-                  n.x = undefined;
-                  n.y = undefined;
-                });
-        */
+
+        const root = nodes.find(n => !n.parent);
+
+        /*                if (root.children.indexOf(rootPersianLexerNode) === -1) {
+                          root.children.push(rootPersianLexerNode);
+                          rootPersianLexerNode.parent = root;
+                        }
+                        if (nodes.indexOf(rootPersianLexerNode) === -1) {
+                          nodes.push(rootPersianLexerNode);
+                        }
+                        // Reset all bucheim members, TODO figure out if I have to do this
+                        nodes.forEach(n => {
+                          n._lmost_sibling = undefined;
+                          n.ancestor = undefined;
+                          n.change = undefined;
+                          n.mod = undefined;
+                          n.shift = undefined;
+                          n.thread = undefined;
+                          n.x = undefined;
+                          n.y = undefined;
+                        });
+                */
 
         let i = 0;
         // For each node with a nodeId === sourceId traverse the children and assign a color
@@ -227,6 +228,7 @@
       editingText$.subscribe(str => {
         const editing = editingNode$.getValue();
         if (editing) {
+          debugger;
           editing.text = str.replace(/<(?:.|\n)*?>/gm, '');
           editing.computeTitle();
         }
@@ -258,6 +260,7 @@
       // Attempt to fetch children if node has no children
       editingNode$.subscribe(n => {
         if (!n) return;
+        if (n.children.length) return;
         const next = async results => {
           /**
            * @type {Node}
@@ -297,9 +300,8 @@
             moveNode(n, n.previousPixelX, n.previousPixelY, n.pixelX, n.pixelY);
           });
 
-
           // Each child of the expandee is told to move in the same way as the expandee
-          expandee.children.forEach( n => moveNode(n, expandee.previousPixelX, expandee.previousPixelY, expandee.pixelX, expandee.pixelY));
+          expandee.children.forEach(n => moveNode(n, expandee.previousPixelX, expandee.previousPixelY, expandee.pixelX, expandee.pixelY));
 
           /**
            * @param expandee {Node}
@@ -318,7 +320,6 @@
           expandee.children.forEach(c => move(c, 1));
 
           return;
-
         };
         r.fetchNodesBelow(n.id || n.nodeId)
           .then(next);
@@ -352,13 +353,6 @@
         const n = new Node({text: 'root'});
         n.children = results;
         results.map(r => r.parent = n);
-
-        /*const r1 = (await r.fetchNodesBelow(601)).map(rFunc);
-        const r2 = (await r.fetchNodesBelow(659)).map(rFunc);
-        const f1 = results.find(r => r.nodeId === 601);
-        const f2 = results.find(r => r.nodeId === 659);
-        results = mergeLoadedSetsIntoTree(results, r1, f1);
-        results = mergeLoadedSetsIntoTree(results, r2, f2);*/
 
         this.$observables.nodes$.next(results.concat(n));
       })();
