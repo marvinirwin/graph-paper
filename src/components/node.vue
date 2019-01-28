@@ -20,6 +20,13 @@
       const o = {
         computedStyle: '',
       };
+      this.node.reposition$.subscribe(v => {
+        o.computedStyle = v;
+      });
+      return o;
+      // Let's hope all this isn't useful.
+
+
 
       const color = this.node.color || this.drawTree.color;
 

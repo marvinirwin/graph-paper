@@ -34,7 +34,7 @@
 </template>
 
 <script>
-  const testData = require('./testdata');
+  /*  const testData = require('./testdata');*/
   import NodeComponent from './components/node';
   import Request from './request';
 
@@ -48,17 +48,16 @@
 
   import {
     buchheim,
-    ConstructGraphFromNodesAndEdges, DrawTree, createChildrenFromSetOfVNestedSetsGraph,
+    DrawTree,
     Node,
     NodeHeight,
     NodeHorizontalMargin,
     NodeLoneWidth,
     NodeVerticalMargin,
     NodeWidth,
-    Point, depthFirst, mergeLoadedSetsIntoTree,
+    depthFirst, mergeLoadedSetsIntoTree,
   } from './node';
-  import {flatten, debounce} from 'lodash';
-  import {BehaviorSubject, merge, from} from 'rxjs';
+  import {BehaviorSubject} from 'rxjs';
   import {map, pluck} from 'rxjs/operators';
 
   const colorWheel = [
@@ -68,12 +67,63 @@
     'purple',
   ];
 
+  const r = new Request();
+
+  function sleep(n) {
+    return new Promise((resolve) => {
+      setTimeout(resolve, n);
+    });
+  }
+
   function getColorWheelColor(i) {
     i = i > colorWheel.length - 1 ? 0 : i;
     return {index: i + 1, color: colorWheel[i]};
   }
 
-  const r = new Request();
+  const movingNodes = {};
+
+  /**
+   * @param n {Node}
+   * @param startX {number}
+   * @param startY
+   * @param endX
+   * @param endY
+   */
+  async function moveNode(n, startX, startY, endX, endY) {
+    console.log([startX, startY, endX, endY]);
+    if (startX === undefined) {
+      debugger;
+      throw new Error('Cannot move to undefined position!')
+    }
+    // First make sure the node here
+    if (movingNodes[n]) {
+      debugger;console.log('Node is being moved twice!');
+    }
+
+    // First make sure the node is where want it
+    const newCss = n.beAtPosition(startX, startY);
+/*    console.log(newCss);*/
+    n.reposition$.next(newCss);
+    await sleep(0);
+    const newGoToCss = n.goToPosition(startX, startY, endX, endY);
+    n.reposition$.next(newGoToCss);
+    await sleep(0);
+    return;
+  }
+
+  /**
+   * @param n {Node}
+   */
+  async function positionNode(n, x, y) {
+    console.log([x, y]);
+    if ([x, y].find(v => v=== undefined)) {
+      debugger;
+      throw new Error('Cannot move to undefined position!')
+    }
+    n.reposition$.next(n.beAtPosition(x, y));
+    await sleep(0);
+  }
+
 
   export default {
     name: 'app',
@@ -127,7 +177,7 @@
           });
         return nodes;
       }));
-      const drawTree$ =  sanitizedNodes$.pipe(map(nodes => {
+      const drawTree$ = sanitizedNodes$.pipe(map(nodes => {
         const root = nodes.find(n => !n.parent);
         if (root) {
           return buchheim(new DrawTree(root));
@@ -137,8 +187,32 @@
       }));
       const positionedDrawTreeElements$ = drawTree$.pipe(map(drawTree => {
         return drawTree && drawTree.allGraph().map(d => {
-          d.pixelX = (NodeWidth + (NodeHorizontalMargin / 2)) * d.x;
-          d.pixelY = (NodeHeight + (NodeVerticalMargin / 2)) * d.y;
+          const n = d.node.node;
+          n.pixelX = (NodeWidth + (NodeHorizontalMargin / 2)) * d.x;
+          n.pixelY = (NodeHeight + (NodeVerticalMargin / 2)) * d.y;
+          const startX = drawTree.node.node.pixelX;
+          const startY = drawTree.node.node.pixelY;
+          // Position all nodes inside of the drawTree
+          if (n.previousPixelX === undefined) {
+/*            if (n.text.includes('Javascript')) {
+              debugger;
+              console.log();
+            }*/
+positionNode(n, startX, startY);
+/*            n.reposition$.next(d.node.node.beAtPosition(startX, startY));*/
+
+            // Then have them move to their proper position, should I use setTimeout or nextTick?
+            setTimeout(() => {
+/*              if (n.text.includes('Javascript')) {
+                debugger;
+                console.log();
+              }*/
+moveNode(n, startX, startY, n.pixelX, n.pixelY);
+/*              n.reposition$.next(n.goToPosition(startX, startY, n.pixelX, n.pixelY));*/
+              /*              setTimeout(() => n.reposition$.next(n.beAtPosition(n.pixelX, n.pixelY)), 3500);*/
+            }, 500);
+          }
+          ;
           return d;
         });
       }));
@@ -185,20 +259,66 @@
       // Attempt to fetch children if node has no children
       editingNode$.subscribe(n => {
         if (!n) return;
-        const next = results => {
+        const next = async results => {
+          /**
+           * @type {Node}
+           */
+          const expandee = n;
           const els = vue.positionedDrawTreeElements$;
           const setTree = t => {
-            t.node.node.alreadyPlaced = true;
-            t.node.node.previousPixelX = t.pixelX;
-            t.node.node.previousPixelY = t.pixelY;
-/*            t.children.forEach(setTree);*/
+            const tnode = t.node.node;
+            tnode.alreadyPlaced = true;
+            tnode.previousPixelX = tnode.pixelX;
+            tnode.previousPixelY = tnode.pixelY;
+            /*            t.children.forEach(setTree);*/
           };
           els.map(setTree);
-/*          setTree(tree);*/
+          /*          setTree(tree);*/
 
-          results = results.map(o => new Node(o));
-          const mergedNodes = mergeLoadedSetsIntoTree(this.$observables.nodes$.getValue(), results, n);
+          /**
+           * @type {Node[]}
+           * */
+          const originalNodes = this.$observables.nodes$.getValue();
+
+          results = results.map(o => {
+            const newNode = new Node(o);
+            newNode.previousPixelX = 1;
+            return newNode;
+          });
+          const mergedNodes = mergeLoadedSetsIntoTree(originalNodes, results, n);
+
           this.$observables.nodes$.next(mergedNodes);
+
+
+          // what happens if I position the original nodes here?
+          // All nodes which are not new travel to their new positions
+          originalNodes.forEach(n => {
+            moveNode(n,n.previousPixelX, n.previousPixelY, n.pixelX, n.pixelY)
+          });
+
+
+
+          // Each child of the expandee is told to move in the same was as the expandee
+          expandee.children.forEach(
+            n => moveNode(n, expandee.previousPixelX, expandee.previousPixelY, expandee.pixelX, expandee.pixelY));
+
+          /**
+           * @param expandee {Node}
+           */
+          function move(expandee) {
+            setTimeout(() => {
+              debugger;
+              moveNode(expandee, expandee.parent.pixelX, expandee.parent.pixelY, expandee.pixelX, expandee.pixelY);
+              expandee.children.forEach(move);
+            }, 1000);
+          }
+
+          // One second later all immediate children of the expandee are told to move
+          // to their proper spots.  All children of the latter nodes move in the same way
+          expandee.children.forEach(move);
+
+          return;
+
         };
         r.fetchNodesBelow(n.id || n.nodeId)
           .then(next);

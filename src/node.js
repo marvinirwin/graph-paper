@@ -1,4 +1,5 @@
 import {uniqBy, uniqueId} from 'lodash';
+import {BehaviorSubject, Subject} from 'rxjs';
 // import {BehaviorSubject} from "rxjs";
 
 export const NodeVerticalMargin = 80;
@@ -19,17 +20,17 @@ export class Point {
 }
 
 function test(v) {
-/*  const text = v.tree.node.text;
+  /*  const text = v.tree.node.text;
 
-console.log(v.x);
-    if (
-      v.x === 41.5 ||
-      v.tree.x === 41.5 ||
-      v.tree.node.x === 41.5
-    ) {
-      debugger;console.log();
-    }*/
-  }
+  console.log(v.x);
+      if (
+        v.x === 41.5 ||
+        v.tree.x === 41.5 ||
+        v.tree.node.x === 41.5
+      ) {
+        debugger;console.log();
+      }*/
+}
 
 export class Node {
   /**
@@ -51,14 +52,70 @@ export class Node {
     this.text = this.text.replace(/#/g, '');
     this.uuid = uniqueId();
     this.computeTitle();
+    /**
+     * @type {Node[]}
+     */
     this.children = this.children || [];
+    /**
+     * @type {Node}
+     */
+    this.parent = this.parent || undefined;
+    this.reposition$ = new BehaviorSubject(``);
     // implement max character limit for title
+    this.pixelX = this.pixelX || undefined;
+    this.pixelY = this.pixelY || undefined;
+    this.previousPixelX = this.previousPixelX || undefined;
+    this.previousPixelY = this.previousPixelY || undefined;
+    this.color = this.color || 'black';
   }
 
   computeTitle() {
     this.lines = this.text.split('\n');
     this.title = this.lines.length ? this.lines[0] : this.text;
     this.title = this.title.substring(0, 90);
+  }
+
+  /**
+   * Root nodes are placed without transitions
+   * @return {string}
+   */
+  rootNodePosition() {
+    return `
+        transition: all 1s;
+        left: ${this.pixelX}px;
+        top: ${this.pixelY}px;
+        color: ${this.color};
+        transform: translate(
+        ${0}px,
+        ${0}px);
+    `;
+  }
+
+  goToPosition(startX, startY, endX, endY) {
+    if ([startX, startY, endX, endY].find(v => v === undefined)) {
+      throw new Error('Cannot be at undefined position!');
+    }
+    return `
+        transform: translate(${endX - startX}px, ${endY - startY}px);
+        left: ${startX}px;
+        top: ${startY}px;
+        transition: all 1s;
+        color: ${this.color};
+    `;
+  }
+
+  /*transform: translate(${0}px, ${0}px); */
+
+  /*        transition: all 1s;*/
+  beAtPosition(x, y) {
+    if ([x, y].find(v => v === undefined)) {
+      throw new Error('Cannot be at undefined position!');
+    }
+    return `
+        left: ${x}px;
+        top: ${y}px;
+        color: ${this.color};`;
+
   }
 }
 
@@ -112,7 +169,7 @@ export function createChildrenFromSetOfVNestedSetsGraph(parent, sets) {
   parent.children = parent.children || [];
   if (parent.rgt - parent.lft === 1) {
     // We have no children, so exit
-    return
+    return;
   }
 
   let pos = parent.lft + 1;
@@ -122,15 +179,15 @@ export function createChildrenFromSetOfVNestedSetsGraph(parent, sets) {
     const g = sets.find(s => s.lft === pos);
     if (!g) {
       pos++;
-      continue
+      continue;
     }
     //@tsignore
     parent.children.push(g);
     g.parent = parent;
 
     createChildrenFromSetOfVNestedSetsGraph(g, sets);
-/*    if (g.rgt - g.lft > 1) {
-    }*/
+    /*    if (g.rgt - g.lft > 1) {
+        }*/
     pos++;
   }
 }
@@ -138,15 +195,16 @@ export function createChildrenFromSetOfVNestedSetsGraph(parent, sets) {
 /**
  *
  * @param originalNodes {Node[]}
- * @param allLoadedNodes {Node[]}
+ * @param newNodes {Node[]}
  * @param parentNode {Node}
  * @return {Node[]}
  */
-export function mergeLoadedSetsIntoTree(originalNodes, allLoadedNodes, parentNode) {
-  const rootGraph = allLoadedNodes.find(r => r.lft === 1);
-  createChildrenFromSetOfVNestedSetsGraph(rootGraph, allLoadedNodes);
-  parentNode.children = rootGraph.children;
-  const newNestedSets = allLoadedNodes.filter(r => r.nodeId !== rootGraph.nodeId);
+export function mergeLoadedSetsIntoTree(originalNodes, newNodes, parentNode) {
+  const rootGraph = newNodes.find(r => r.lft === 1);
+  createChildrenFromSetOfVNestedSetsGraph(parentNode, newNodes);
+/*  parentNode.children = rootGraph.children;*/
+/*  parentNode.children.forEach(g => g.parent = parentNode);*/
+  const newNestedSets = newNodes.filter(r => r.nodeId !== rootGraph.nodeId);
   // TODO figure out of I have to reset their positions when I recalculate
   return originalNodes.concat(...newNestedSets);
 }
@@ -247,6 +305,7 @@ export function buchheim(tree) {
   }*/
   return dt;
 }
+
 /*
 function third_walk(tree, n) {
   tree.x += n;
@@ -277,7 +336,7 @@ function firstwalk(v, distance = 1.) {
       default_ancestor = apportion(w, default_ancestor, distance);
     });
     /*        print "finished v =", v.tree, "children"*/
-/*    execute_shifts(v);*/
+    /*    execute_shifts(v);*/
 
     let midpoint = (v.children[0].x + v.children.slice(-1).pop().x) / 2;
 
@@ -358,7 +417,7 @@ function execute_shifts(v) {
     w.mod += shift;
     change += w.change;
     shift += w.shift + change;
-    test(w)
+    test(w);
   });
 }
 
