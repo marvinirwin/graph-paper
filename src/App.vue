@@ -1,18 +1,16 @@
 <template>
     <div id="app">
-        <quill-editor
-                v-if="editingNode$"
-                style="
-                    position: fixed;
-                    width: 100vw;
-                    height: 100vh;
-                    background-color: white;
-                    z-index: 100;"
-                ref="myQuillEditor"
-                v-model="content"
-                @change="handleEditorChange"
-        >
-        </quill-editor>
+        <div id="sidebar" :class="{editing: editingNode$}">
+            <quill-editor
+                    id="editor"
+                    ref="myQuillEditor"
+                    v-model="content"
+                    @change="handleEditorChange"
+            >
+            </quill-editor>
+            <textarea id="import" v-model="importText"></textarea>
+            <button @click="importJson">Import</button>
+        </div>
         <!--        <div>
                     <div id="editor-container">
                         &lt;!&ndash;            <div id="toolbar" ref="toolbar">
@@ -133,7 +131,7 @@
       VueQuillEditor,
     },
     data() {
-      return {content: ''};
+      return {content: '', importText: ''};
     },
     subscriptions() {
       const vue = this;
@@ -214,7 +212,6 @@
               /*              setTimeout(() => n.reposition$.next(n.beAtPosition(n.pixelX, n.pixelY)), 3500);*/
             }, 500);
           }
-          ;
           return d;
         });
       }));
@@ -340,12 +337,16 @@
         };
         r.fetchNodesBelow(n.id || n.nodeId)
           .then(next);
-      }
+      },
+      async importJson() {
+        const v = JSON.parse(this.importText);
+        await r.importStructure(v);
+      },
     },
     mounted() {
       window.addEventListener('keydown', (e) => {
-        switch(e.key) {
-          case "Escape":
+        switch (e.key) {
+          case 'Escape':
             this.$observables.editingNode$.next(undefined);
         }
       });
@@ -373,13 +374,43 @@
     @import "~quill/dist/quill.core.css";
     @import url(https://fonts.googleapis.com/css?family=Inconsolata);
 
+    #sidebar {
+        background-color: white;
+        z-index: 1;
+        height: 100vh;
+        position: fixed;
+        display: flex;
+        flex-flow: column nowrap;
+        background-size: 40px 40px;
+        background-image: linear-gradient(to right, rgb(136, 199, 201) 1px, transparent 1px), linear-gradient(to bottom, rgb(136, 199, 201) 1px, transparent 1px);
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.07);
+        transition: 0.5s all;
+        border-right: solid black 1px;
+        width: 240px;
+        transform: translateX(-239px);
+    }
+    #sidebar:not(.editing) {
+    }
+    #sidebar:not(.editing):hover {
+        transform: none;
+    }
+
+    #sidebar.editing {
+        width: 480px;
+        transform: translateX(0);
+    }
+
+    #editor {
+        z-index: 1;
+        background-color: white;
+    }
+
     body {
         background-size: 40px 40px;
         background-image: linear-gradient(to right, rgb(136, 199, 201) 1px, transparent 1px), linear-gradient(to bottom, rgb(136, 199, 201) 1px, transparent 1px);
         box-shadow: 0 1px 2px rgba(0, 0, 0, 0.07);
         margin: 0;
         font-family: monospace;
-    ;
     }
 
     #tree-container {

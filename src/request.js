@@ -6,13 +6,25 @@ class Message {
   }
 }
 
-const UrlSources = '/api/vnested-sets-graph-source-nodes';
-const UrlGraphs = '/api/vnested-sets-graphs';
+const UrlSources = '/api/VNestedSetsGraphSourceNodes';
+const UrlGraphs = '/api/VNestedSetsGraphs';
+const UrlVNode = '/api/VNodes';
+const UrlNode = '/api/Nodes';
+const UrlNodeRevision = '/api/NodeRevisions';
+const UrlEdge = '/api/Edges';
+const UrlEdgeRevision = '/api/EdgeRevisions';
+const UrlVEdge = '/api/VEdge';
 
 export default class RequestManager {
   constructor() {
     this.user$ = new BehaviorSubject(undefined);
     this.messages$ = new BehaviorSubject(undefined);
+    axios.interceptors.request.use(function (config) {
+      config.params = config.params || {};
+      config.params.access_token = localStorage.getItem('access_token');
+      return config;
+
+    });
   }
 
   addMessage(str) {
@@ -30,7 +42,10 @@ export default class RequestManager {
     /**
      * @type {VNestedSetsGraphSourceNode[]}
      */
-    const result = await axios.get(UrlSources, {params: {filter: {where: {text: {neq: ''}, visible: true}}}});
+    const result = await axios.get(UrlSources, {params: {filter: {
+      where: {text: {neq: ''}, visible: true},
+      order: ['lastModified DESC', 'createdTimestamp DESC']
+    }}});
     result.data.forEach(sanitizeNestedSet);
     return result.data;
   }
@@ -48,6 +63,59 @@ export default class RequestManager {
     return result.data;
   }
 
+  /**
+   * @param parentId {number?}
+   * @param text {string}
+   * @return {Promise<*>}
+   */
+  async createNode(parentId, text) {
+    // first create the node, then the edge
+    const node = (await axios.post(UrlNode)).data;
+    const nodeRevision = (await axios.post(UrlNodeRevision, {nodeId: node.id, text})).data;
+    if (parent) {
+      const edge = (await axios.post(UrlEdge)).data;
+      const edgeRevision = (await axios.post(UrlEdgeRevision, {edgeId: edge.id, n1: parentId, n2: node.id}));
+    }
+
+    const set = (await axios.get(`${UrlVNode}/${node.id}`, {params: {filter: {}}})).data;
+    debugger;
+    return set;
+  }
+
+  /**
+   * This one can't return a set because the set will be gone
+   * @param nodeId
+   * @return {Promise<void>}
+   */
+  async hideNode(nodeId) {
+    const nodeRevision = await axios.post(UrlNodeRevision, {nodeId, visible: ''});
+  }
+
+  /**
+   * Takes a tree structure like  with {text: '', children: []}
+   * @param structure
+   * @return {Promise<void>}
+   */
+  async importStructure(struct, parentId) {
+    const vNode = await this.createNode(parentId, struct.text);
+    for (let i = 0; i < struct.children.length; i++) {
+      const child = struct.children[i];
+      await this.importStructure(child, vNode.id);
+    }
+  }
+
+  async moveNode(node, newParentNodeId) {
+    // If we have no new parent then it becomes a root, so we must make the edge useless
+    const edgeToModify = (await axios.get(`${UrlVEdge}`, {params: {where: {n2: node.id}}})).data[0];
+    if (!newParentNodeId) {
+      const silenceRevision = (await axios.post(UrlEdgeRevision, {edgeId: edgeToModify.id, n1: undefined, n2: undefined})).data
+    } else {
+      const changeRevision = (await axios.post(UrlEdgeRevision, {edgeId: edgeToModify.id, n1: node, n2: newParentNodeId})).data
+    }
+    // Now our tree has been recomputed, grab us again
+    const set = (await axios.get(UrlGraphs, {params: {where: {nodeId: node.id}}})).data[0];
+    return set;
+  }
 
   // TODO redo the url, I'll probably have to do the long chain based off user again
   /*    async persistNodeText(id, text) {
