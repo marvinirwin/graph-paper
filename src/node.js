@@ -1,5 +1,6 @@
 import {uniqBy, uniqueId} from 'lodash';
 import {BehaviorSubject, Subject} from 'rxjs';
+import {map, scan} from 'rxjs/operators';
 // import {BehaviorSubject} from "rxjs";
 
 export const NodeVerticalMargin = 80;
@@ -32,6 +33,20 @@ function test(v) {
       }*/
 }
 
+export class BasicNode {
+  /**
+   * @param id {number}
+   * @param parent {BasicNode}
+   * @param children {BasicNode[]}
+   */
+  constructor(id, parent, children, node) {
+    this.id = id;
+    this.parent = parent;
+    this.children = children;
+    this.node = node;
+  }
+}
+
 export class Node {
   /**
    * root {Node}
@@ -43,85 +58,114 @@ export class Node {
     }
   }
 
+  // Nodes can be created out of NestedSetsGraphs or nodes
   constructor(o) {
-    Object.assign(this, o);
     /**
-     * {string}
+     * If this is created from a nestedSetsGraph our id will be nodeId
+     * @type {number}
      */
-    this.text = o.text || '';
-    this.text = this.text.replace(/#/g, '');
-    this.uuid = uniqueId();
-    this.computeTitle();
+    this.id = o.nodeId || o.id;
+    /**
+     *@type {string}
+     */
+    this.text = o.text ? o.text.replace(/#/g, '') : '';
     /**
      * @type {Node[]}
      */
-    this.children = this.children || [];
+    /**
+     * @type {Node[]}
+     */
+    this.children = o.children || [];
     /**
      * @type {Node}
      */
-    this.parent = this.parent || undefined;
-    this.reposition$ = new BehaviorSubject(``);
+    this.parent = o.parent || undefined;
+
     // implement max character limit for title
-    this.pixelX = this.pixelX || undefined;
-    this.pixelY = this.pixelY || undefined;
-    this.previousPixelX = this.previousPixelX || undefined;
-    this.previousPixelY = this.previousPixelY || undefined;
-    this.color = this.color || 'black';
+    /*    this.pixelX = o.pixelX || undefined;
+        this.pixelY = o.pixelY || undefined;
+        this.previousPixelX = this.previousPixelX || undefined;
+        this.previousPixelY = this.previousPixelY || undefined;*/
+
+    this.computeTitle();
   }
 
+  toBasicNodeTree() {
+    const basicNode = new BasicNode(
+      this.id,
+      this.parent,
+      this.children.map(c => {
+        if (!c.toBasicNodeTree) {
+          debugger;console.log();
+        }
+        return c.toBasicNodeTree();
+      }),
+      this);
+    return basicNode;
+  }
+
+  /**
+   * Creates the title of this node
+   */
   computeTitle() {
     this.lines = this.text.split('\n');
     this.title = this.lines.length ? this.lines[0] : this.text;
     this.title = this.title.substring(0, 50);
   }
 
-  /**
-   * Root nodes are placed without transitions
-   * @return {string}
-   */
-  rootNodePosition() {
-    return `
-        transition: all 1s;
-        left: ${this.pixelX}px;
-        top: ${this.pixelY}px;
-        color: ${this.color};
-        transform: translate(
-        ${0}px,
-        ${0}px);
-    `;
+}
+
+export class Net {
+  constructor(nodes$, nodesTransform, name) {
+    /**
+     * @type {string}
+     */
+    this.name = name;
+    /**
+     * @type {BehaviorSubject<Node>}
+     */
+    this.nodes$ = nodes$;
+    // This is the function which
+    this.basicNodeMap = nodesTransform;
+    this.drawTree$ = this.nodes$.pipe(map(nodes => {
+      /**
+       * @type {Node}
+       */
+      const root = nodes.find(n => !n.parent);
+      return root ? buchheim(root.toBasicNodeTree()) : undefined;
+    }));
+    this.mergedDrawTree$ = this.drawTree$.pipe(scan((oldTree, newTree) => {
+      if (!oldTree) {
+        return newTree;
+      }
+      if (!oldTree.allGraph) {
+        debugger;console.log();
+      }
+      const oldNodes = oldTree.allGraph();
+      const newNodes = newTree.allGraph();
+      for (let i = 0; i < newNodes.length; i++) {
+        const newNode = newNodes[i];
+        const oldNode = oldNodes && oldNodes.find(o => o.tree.id === newNode.tree.id);
+        if (oldNode) {
+          newNode.previousX = oldNode.x;
+          newNode.previousY = oldNode.y;
+        }
+      }
+      return newTree;
+    }));
   }
+}
 
-  goToPosition(startX, startY, endX, endY) {
-    if ([startX, startY, endX, endY].find(v => v === undefined)) {
-      throw new Error('Cannot be at undefined position!');
-    }
-    return `
-        transform: translate(${endX - startX}px, ${endY - startY}px);
-        left: ${startX}px;
-        top: ${startY}px;
-        transition: all 1s;
-        color: ${this.color};
-    `;
-  }
+export function ScaleX(x) {
+  return x * (NodeWidth + NodeHorizontalMargin);
+}
 
-  /*transform: translate(${0}px, ${0}px); */
-
-  /*        transition: all 1s;*/
-  beAtPosition(x, y) {
-    if ([x, y].find(v => v === undefined)) {
-      throw new Error('Cannot be at undefined position!');
-    }
-    return `
-        left: ${x}px;
-        top: ${y}px;
-        color: ${this.color};`;
-
-  }
+export function ScaleY(y) {
+  return y * (NodeHeight + NodeVerticalMargin);
 }
 
 /*export function ConstructGraphFrom*/
 
-// TODO redo this function so that it can handle multiple firstNodes (The result query is from requesting only one, but it would be cool to do all of them)
 /**
  * @param o
  * @returns {Node[]}
@@ -158,8 +202,6 @@ export function ConstructGraphFromNodesAndEdges(o) {
 }
 
 /**
- *
- * @param l {number}
  * @param parent {VNestedSetsGraph}
  * @param sets {VNestedSetsGraph[]}
  * @returns {VNestedSetsGraph[]}
@@ -167,10 +209,10 @@ export function ConstructGraphFromNodesAndEdges(o) {
 export function createChildrenFromSetOfVNestedSetsGraph(parent, sets) {
   //@tsignore
   parent.children = parent.children || [];
-/*  if (parent.rgt - parent.lft === 1) {
-    // We have no children, so exit
-    return parent.rgt + 1;
-  }*/
+  /*  if (parent.rgt - parent.lft === 1) {
+      // We have no children, so exit
+      return parent.rgt + 1;
+    }*/
 
   let pos = parent.lft + 1;
   while (pos < parent.rgt) {
@@ -202,17 +244,19 @@ export function createChildrenFromSetOfVNestedSetsGraph(parent, sets) {
 export function mergeLoadedSetsIntoTree(originalNodes, newNodes, parentNode) {
   const rootGraph = newNodes.find(r => r.lft === 1);
   createChildrenFromSetOfVNestedSetsGraph(parentNode, newNodes);
-/*  parentNode.children = rootGraph.children;*/
-/*  parentNode.children.forEach(g => g.parent = parentNode);*/
+  /*  parentNode.children = rootGraph.children;*/
+  /*  parentNode.children.forEach(g => g.parent = parentNode);*/
   // TODO figure out of I have to reset their positions when I recalculate
   return originalNodes.concat(...newNodes);
 }
 
-// I stole this all from https://llimllib.github.io/pymag-trees/
-// I need to find a way to combine drawTree and node
-// Compute the drawTree and then assign nodes?
-// I can't do this because drawTree calculation is linked to node parents/children
-// All nodes will be drawTrees eventually
+/**
+ * I stole this all from https://llimllib.github.io/pymag-trees/
+ * I need to find a way to combine drawTree and node
+ * Compute the drawTree and then assign nodes?
+ * I can't do this because drawTree calculation is linked to node parents/children
+ * All nodes will be drawTrees eventually
+ */
 
 export function depthFirst(n, f) {
   f(n);
@@ -221,16 +265,23 @@ export function depthFirst(n, f) {
 
 export class DrawTree {
   constructor(tree, parent = undefined, depth = 0, number = 1) {
-    this.node = tree;
+    /**
+     * @type {string}
+     */
+    this.uuid = _.uniqueId();
+    /**
+     * @type {Vue}
+     */
+    this.component = null;
+    if (!tree) {
+      debugger;console.log();
+    }
     this.x = -1.;
     this.y = depth;
     this.tree = tree;
     this.children = tree.children.map((c, i) => {
       return new DrawTree(c, this, depth + 1, i + 1);
     });
-    /*        this.children = [DrawTree(c, self, depth + 1, i + 1)
-            for i, c
-                in enumerate(tree.children)]*/
     this.parent = parent;
     this.thread = undefined;
     this.mod = 0;
@@ -240,9 +291,10 @@ export class DrawTree {
     //this is the number of the node in its group of siblings 1..n
     this.number = number;
 
-    this.uuid = uniqueId();
-    this.pixelX = 0;
-    this.pixelY = 0;
+    this.previousX = undefined;
+    this.previousY = undefined;
+
+    this.repositions$ = new BehaviorSubject('');
   }
 
   allGraph(arr = []) {
@@ -293,6 +345,42 @@ export class DrawTree {
 
     return this._lmost_sibling;
     /*        lmost_sibling = property(get_lmost_sibling)*/
+  }
+
+  positionRootNode() {
+    return `
+        transition: all 1s;
+        left: ${ScaleX(this.x)}px;
+        top: ${ScaleY(this.y)}px;
+        color: ${this.tree.node.color};
+        transform: translate(
+        ${0}px,
+        ${0}px);
+    `;
+  }
+
+  goToPosition(startX, startY, endX, endY) {
+    if ([startX, startY, endX, endY].find(v => v === undefined)) {
+      throw new Error('Cannot be at undefined position!');
+    }
+    return `
+        transform: translate(${endX - startX}px, ${endY - startY}px);
+        left: ${startX}px;
+        top: ${startY}px;
+        transition: all 1s;
+        color: ${this.tree.color};
+    `;
+  }
+
+  beAtPosition(x, y) {
+    if ([x, y].find(v => v === undefined)) {
+      throw new Error('Cannot be at undefined position!');
+    }
+    return `
+        left: ${x}px;
+        top: ${y}px;
+        color: ${this.tree.node.color};`;
+
   }
 }
 
@@ -408,7 +496,7 @@ function move_subtree(wl, wr, shift) {
   test(wr);
 }
 
-function execute_shifts(v) {
+/*function execute_shifts(v) {
   let shift, change;
   shift = change = 0;
   v.children.slice(0, -1).map(w => {
@@ -418,7 +506,7 @@ function execute_shifts(v) {
     shift += w.shift + change;
     test(w);
   });
-}
+}*/
 
 function ancestor(vil, v, default_ancestor) {
   //the relevant text is at the bottom of page 7 of

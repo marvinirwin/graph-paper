@@ -1,6 +1,8 @@
 <template>
     <div id="app">
         <div id="sidebar" :class="{editing: editingNode$}">
+            <div>{{email || 'not logged in'}}</div>
+            <a href="/auth/google" style="margin: 20px; font-size: 150%;">Sign in with google</a>
             <quill-editor
                     id="editor"
                     ref="myQuillEditor"
@@ -21,12 +23,12 @@
                     </div>
                 </div>-->
         <div id="tree-container" ref="treeContainer">
-            <node v-for="drawTree in positionedDrawTreeElements$"
-                  :node="drawTree.node.tree"
+            <node v-for="(drawTree, index) in mainDrawTreeElements$"
                   :drawTree="drawTree"
                   :key="drawTree.uuid"
-                  @click.exact="loadNodeChildren(drawTree.node.tree)"
+                  @click.exact="loadNodeChildren(drawTree.tree.node)"
                   @click.shift="$observables.editingNode$.next(drawTree.node.tree)"
+                  @createChild="createChild"
             >
             </node>
         </div>
@@ -43,22 +45,20 @@
   import 'quill/dist/quill.bubble.css';
 
   import {VueQuillEditor} from 'vue-quill-editor';
-
-  import {lex, WordNode, lexers} from './persian-lexer';
-
   import {
-    buchheim,
+    createChildrenFromSetOfVNestedSetsGraph,
+    depthFirst,
     DrawTree,
+    Net,
     Node,
-    NodeHeight,
-    NodeHorizontalMargin,
     NodeLoneWidth,
-    NodeVerticalMargin,
-    NodeWidth,
-    depthFirst, mergeLoadedSetsIntoTree,
+    ScaleX,
+    ScaleY,
   } from './node';
   import {BehaviorSubject} from 'rxjs';
   import {map, pluck} from 'rxjs/operators';
+
+  /*  import {lex, WordNode, lexers} from './persian-lexer';*/
 
   const colorWheel = [
     'blue',
@@ -66,6 +66,22 @@
     'green',
     'purple',
   ];
+
+  function getCookie(cname) {
+    const name = cname + '=';
+    const decodedCookie = decodeURIComponent(document.cookie);
+    const ca = decodedCookie.split(';');
+    for (let i = 0; i < ca.length; i++) {
+      let c = ca[i];
+      while (c.charAt(0) == ' ') {
+        c = c.substring(1);
+      }
+      if (c.indexOf(name) == 0) {
+        return c.substring(name.length, c.length);
+      }
+    }
+    return '';
+  }
 
   const r = new Request();
 
@@ -83,13 +99,21 @@
   const movingNodes = {};
 
   /**
-   * @param n {Node}
+   * @param n {DrawTree}
    * @param startX {number}
    * @param startY
    * @param endX
    * @param endY
    */
   async function moveNode(n, startX, startY, endX, endY) {
+    if (!n.component) {
+      debugger;throw new Error("Move called with no component!")
+    }
+/*    console.log(n, startX, startY, endX, endY);*/
+    if (startX === endX && startY === endY) {
+      return;
+    }
+
     if (startX === undefined) {
       debugger;
       throw new Error('Cannot move to undefined position!');
@@ -102,27 +126,29 @@
 
     // First make sure the node is where want it
     const newCss = n.beAtPosition(startX, startY);
-    /*    console.log(newCss);*/
-    n.reposition$.next(newCss);
+/*    console.log(newCss);*/
+    n.repositions$.next(newCss);
     await sleep(0);
     const newGoToCss = n.goToPosition(startX, startY, endX, endY);
-    n.reposition$.next(newGoToCss);
+/*    console.log(newGoToCss);*/
+    n.repositions$.next(newGoToCss);
     await sleep(0);
-    return;
+    return n.repositions$.getValue();
   }
 
   /**
-   * @param n {Node}
+   * @param n {DrawTree}
+   * @param x {number}
+   * @param y {number}
    */
   async function positionNode(n, x, y) {
     if ([x, y].find(v => v === undefined)) {
       debugger;
       throw new Error('Cannot move to undefined position!');
     }
-    n.reposition$.next(n.beAtPosition(x, y));
+    n.repositions$.next(n.beAtPosition(x, y));
     await sleep(0);
   }
-
 
   export default {
     name: 'app',
@@ -131,92 +157,21 @@
       VueQuillEditor,
     },
     data() {
-      return {content: '', importText: ''};
+      return {
+        content: '',
+        importText: '',
+        email: getCookie('email'),
+      };
     },
     subscriptions() {
-      const vue = this;
-      let root;
-      const rootPersianLexerNode = new Node({text: 'دشتی'});
-      const nodes$ = new BehaviorSubject([]);
-      /*      const nodes$ = new BehaviorSubject(ConstructGraphFromNodesAndEdges());*/
-      const sanitizedNodes$ = nodes$.pipe(map(nodes => {
-
-        // Add the lexer node(s)
-
-        const root = nodes.find(n => !n.parent);
-
-        /*                if (root.children.indexOf(rootPersianLexerNode) === -1) {
-                          root.children.push(rootPersianLexerNode);
-                          rootPersianLexerNode.parent = root;
-                        }
-                        if (nodes.indexOf(rootPersianLexerNode) === -1) {
-                          nodes.push(rootPersianLexerNode);
-                        }
-                        // Reset all bucheim members, TODO figure out if I have to do this
-                        nodes.forEach(n => {
-                          n._lmost_sibling = undefined;
-                          n.ancestor = undefined;
-                          n.change = undefined;
-                          n.mod = undefined;
-                          n.shift = undefined;
-                          n.thread = undefined;
-                          n.x = undefined;
-                          n.y = undefined;
-                        });
-                */
-
-        let i = 0;
-        // For each node with a nodeId === sourceId traverse the children and assign a color
-        nodes.filter(n => {
-          return n.parent === root;
-        })
-          .forEach(n => {
-            let {color, index} = getColorWheelColor(i);
-            i = index;
-            depthFirst(n, node => node.color = color);
-          });
-        return nodes;
-      }));
-      const drawTree$ = sanitizedNodes$.pipe(map(nodes => {
-        const root = nodes.find(n => !n.parent);
-        if (root) {
-          return buchheim(new DrawTree(root));
-        } else {
-          return undefined;
-        }
-      }));
-      const positionedDrawTreeElements$ = drawTree$.pipe(map(drawTree => {
-        return drawTree && drawTree.allGraph().map(d => {
-          const n = d.node.node;
-          n.pixelX = ((NodeWidth + (NodeHorizontalMargin / 2)) * d.x);
-          n.pixelY = ((NodeHeight + (NodeVerticalMargin / 2)) * d.y) - NodeHeight;
-          const startX = drawTree.node.node.pixelX;
-          const startY = drawTree.node.node.pixelY;
-          // Position all nodes inside of the drawTree
-          if (n.previousPixelX === undefined) {
-            /*            if (n.text.includes('Javascript')) {
-                          debugger;
-                          console.log();
-                        }*/
-            positionNode(n, startX, startY);
-            /*            n.reposition$.next(d.node.node.beAtPosition(startX, startY));*/
-
-            // Then have them move to their proper position, should I use setTimeout or nextTick?
-            setTimeout(() => {
-              /*              if (n.text.includes('Javascript')) {
-                              debugger;
-                              console.log();
-                            }*/
-              moveNode(n, startX, startY, n.pixelX, n.pixelY);
-              /*              n.reposition$.next(n.goToPosition(startX, startY, n.pixelX, n.pixelY));*/
-              /*              setTimeout(() => n.reposition$.next(n.beAtPosition(n.pixelX, n.pixelY)), 3500);*/
-            }, 500);
-          }
-          return d;
-        });
-      }));
       /**
        * @type {BehaviorSubject<Node>}
+       */
+      const nodes$ = new BehaviorSubject([]);
+      const mainGraph = new Net(nodes$, n => n, 'Main');
+      const shadowGraph = new Net(nodes$, n => n, 'Shadow');
+      /**
+       * @type {Observable<DrawTree[]>}
        */
       const editingNode$ = new BehaviorSubject(undefined);
       /**
@@ -224,29 +179,12 @@
        */
       const editor$ = new BehaviorSubject(undefined);
       const editingText$ = this.$watchAsObservable('content').pipe(pluck('newValue'));
+      // Remove Quilll html tags
       editingText$.subscribe(str => {
         const editing = editingNode$.getValue();
         if (editing) {
           editing.text = str.replace(/<(?:.|\n)*?>/gm, '');
           editing.computeTitle();
-        }
-      });
-      // Add the tree recalculation for the language node(s)
-      editingText$.subscribe(() => {
-        const editing = editingNode$.getValue();
-        if (editing === rootPersianLexerNode) {
-          let wordNode = new WordNode(editing.text, '');
-          let wordNodeChildren = wordNode.value.split(' ');
-          if (wordNodeChildren.length) {
-            wordNode.children = wordNodeChildren.map(str => new WordNode(str, ''));
-            wordNode.children.map(c => lex(c, lexers));
-          } else {
-            lex(wordNode, lexers);
-          }
-          wordNode = wordNode.ConvertToNode();
-
-          editing.children = [wordNode];
-          nodes$.next(nodes$.getValue());
         }
       });
       // Change content if there is a new node
@@ -261,86 +199,124 @@
       });
       return {
         nodes$,
-        drawTree$,
-        positionedDrawTreeElements$,
+        mainDrawTreeElements$:
+          mainGraph.mergedDrawTree$.pipe(map(t => /*console.log(t) ||*/ t &&  t.allGraph())),
+        shadowDrawTreeElements$:
+          shadowGraph.mergedDrawTree$.pipe(map(t => /*console.log(t) ||*/ t &&  t.allGraph())),
         editingNode$,
         editor$,
         editingText$,
       };
     },
     methods: {
+      /**
+       * @type {Node}
+       */
       handleNodeClick(node) {
         this.$observables.editingNode$.next(node);
       },
+      /**
+       * @param text {string}
+       */
       handleEditorChange({text}) {
       },
-      loadNodeChildren(n) {
-        const next = async results => {
-          /**
-           * @type {Node}
-           */
-          if (n.children && n.children.length) {
-            return;
+      /**
+       * If we have a previous X, then we move from there
+       * If we do not have a previous X then we do not move because our movement will be custom
+       * @type {DrawTree[]}
+       */
+      repositionDrawTreeBasic(drawTreeElements) {
+        for (let i = 0; i < drawTreeElements.length; i++) {
+          const drawTreeElement = drawTreeElements[i];
+          if (drawTreeElement.previousX !== undefined) {
+            moveNode(
+              drawTreeElement,
+              ScaleX(drawTreeElement.previousX),
+              ScaleY(drawTreeElement.previousY),
+              ScaleX(drawTreeElement.x),
+              ScaleY(drawTreeElement.y))
           }
-          const expandee = n;
-          const els = this.positionedDrawTreeElements$;
-          const setTree = t => {
-            const tnode = t.node.node;
-            tnode.alreadyPlaced = true;
-            tnode.previousPixelX = tnode.pixelX;
-            tnode.previousPixelY = tnode.pixelY;
-            /*            t.children.forEach(setTree);*/
-          };
-          els.map(setTree);
-          /*          setTree(tree);*/
+        }
+      },
+      /**
+       * @param drawTreeElements {DrawTree[]}
+       */
+      async repositionDrawTreeRoot(drawTreeElements) {
+        // Maybe the root is always the first one and I don't have to do this
+        const root = drawTreeElements.find(n => !n.parent);
+        drawTreeElements.map(e => positionNode(e, ScaleX(root.x), ScaleY(root.y)));
+        await sleep(1001);
+        drawTreeElements.map(e => moveNode(e,
+          ScaleX(root.x),
+          ScaleY(root.y),
+          ScaleX(e.x),
+          ScaleY(e.y)));
+      },
+      /**
+       * @type {DrawTree}
+       */
+      repositionDrawTreeRecursive(drawTree) {
+        // First move the parent where it has to go
+        function move(expandee, depth) {
+          setTimeout(() => {
+            const startX = ScaleX(expandee.parent.x);
+            const startY = ScaleY(expandee.parent.y);
+            const endX = ScaleX(expandee.x);
+            const endY = ScaleY(expandee.y);
+            debugger;
+            moveNode(
+              expandee,
+              startX,
+              startY,
+              endX,
+              endY);
 
-          /**
-           * @type {Node[]}
-           * */
-          const originalNodes = this.$observables.nodes$.getValue();
-
-          results = results.map(o => {
-            const newNode = new Node(o);
-            newNode.previousPixelX = 1;
-            return newNode;
-          });
-          const mergedNodes = mergeLoadedSetsIntoTree(originalNodes, results.filter(r => r.nodeId !== n.nodeId), n);
-
-          this.$observables.nodes$.next(mergedNodes);
-
-          // what happens if I position the original nodes here?
-          // All nodes which are not new travel to their new positions
-          originalNodes.forEach(n => {
-            moveNode(n, n.previousPixelX, n.previousPixelY, n.pixelX, n.pixelY);
-          });
-
-          // Each child of the expandee is told to move in the same way as the expandee
-          expandee.children.forEach(n => moveNode(n, expandee.previousPixelX, expandee.previousPixelY, expandee.pixelX, expandee.pixelY));
-
-          /**
-           * @param expandee {Node}
-           */
-          function move(expandee, depth) {
-            setTimeout(() => {
-              moveNode(expandee, expandee.parent.pixelX, expandee.parent.pixelY, expandee.pixelX, expandee.pixelY);
-              expandee.children.forEach(c => {
-                move(c, depth + 1);
-              });
-            }, 1000);
-          }
-
-          // One second later all immediate children of the expandee are told to move
-          // to their proper spots.  All children of the latter nodes move in the same way
-          expandee.children.forEach(c => move(c, 1));
-
-          return;
+            expandee.children.forEach(c => {
+              move(c, depth + 1);
+            });
+          }, 1000);
+        }
+        move(drawTree, 0);
+      },
+      /**
+       * @type {Node}
+       */
+      async loadNodeChildren(n) {
+        // Get graphs, create a tree out of them
+        const resultSets = await r.fetchNodesBelow(n.id);
+        const root = resultSets.find(s => s.lft === 1);
+        createChildrenFromSetOfVNestedSetsGraph(root, resultSets);
+        const newNodes = [];
+        const createNodes = (n) => {
+          n.nodeId = parseInt(n.nodeId, 10);
+          const node = new Node(n);
+          newNodes.push(node);
+          node.children = n.children.map(createNodes);
+          return node;
         };
-        r.fetchNodesBelow(n.id || n.nodeId)
-          .then(next);
+        n.children = root.children.map(createNodes);
+        n.children.map(c => c.parent = n);
+
+        // Now newNodes is full of nodes, push them into our list of nodes,
+        // which should trigger our drawTrees synchronously?
+        this.$observables.nodes$.next(this.$observables.nodes$.getValue().concat(...newNodes));
+        root.nodeId = parseInt(root.nodeId, 10);
+        // Find the root in the main drawTree
+        await sleep(1000);
+        const mainRoot = this.mainDrawTreeElements$.find(e => {
+          return e.tree.node.id === root.nodeId
+        });
+        this.repositionDrawTreeRecursive(mainRoot);
       },
       async importJson() {
         const v = JSON.parse(this.importText);
         await r.importStructure(v);
+      },
+      async createChild(n) {
+        const newChild = new Node(await r.createNode(n.nodeId || n.id));
+        n.children.push(newChild);
+        newChild.parent = n;
+        this.$observables.nodes$.next(this.nodes$.concat(newChild));
       },
     },
     mounted() {
@@ -351,19 +327,26 @@
         }
       });
       (async () => {
-        function rFunc(r) {
-          r.children = [];
-          r.parent = n;
-          return new Node(r);
-        }
-
-        let results = (await r.fetchSources()).map(rFunc);
-
-        const n = new Node({text: 'root'});
-        n.children = results;
-        results.map(r => r.parent = n);
-
-        this.$observables.nodes$.next(results.concat(n));
+        let i = 0;
+        const root = new Node({text: 'root'});
+        let results = await r.fetchSources();
+        results.forEach(r => r.parent = root);
+        results = results.map(r => new Node(r));
+        root.children = results;
+        // Do the color wheel here, for now
+        this.$observables.nodes$.subscribe(nodes => {
+          /**
+           * @type {Node}
+           */
+          nodes.filter(n => n.parent === root)
+            .forEach(c => {
+              let {index, color} = getColorWheelColor(i);
+              depthFirst(c, node => node.color = color);
+              i = index;
+            })
+        });
+        this.$observables.nodes$.next(results.concat(root));
+        this.repositionDrawTreeRoot(this.mainDrawTreeElements$);
       })();
     },
     computed: {},
@@ -389,8 +372,10 @@
         width: 240px;
         transform: translateX(-239px);
     }
+
     #sidebar:not(.editing) {
     }
+
     #sidebar:not(.editing):hover {
         transform: none;
     }
@@ -418,26 +403,6 @@
                 flex-flow: row nowrap;
                 justify-content: center;*/
         position: relative;
-    }
-
-    .node {
-        position: absolute;
-        box-sizing: border-box;
-        display: flex;
-        align-items: center;
-        flex-flow: column nowrap;
-        line-height: 20px;
-        font-size: 20px;
-        border-style: solid;
-        border-width: 1px;
-        min-width: 240px;
-        max-width: 240px;
-        min-height: 80px;
-        max-height: 80px;
-    }
-
-    .node:hover {
-        cursor: pointer;
     }
 
 

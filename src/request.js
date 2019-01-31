@@ -55,10 +55,13 @@ export default class RequestManager {
    * @return {Promise<VNestedSetsGraph[]>}
    */
   async fetchNodesBelow(nodeId) {
+    if (!nodeId) {
+      debugger;console.log();
+    }
     /**
      * @type {VNestedSetsGraph[]}
      */
-    const result = await axios.get(UrlGraphs, {params: {filter: {where: {sourceId: nodeId,}}}});
+    const result = await axios.get(UrlGraphs, {params: {filter: {where: {sourceId: nodeId}}}});
     result.data.forEach(sanitizeNestedSet);
     return result.data;
   }
@@ -78,7 +81,6 @@ export default class RequestManager {
     }
 
     const set = (await axios.get(`${UrlVNode}/${node.id}`, {params: {filter: {}}})).data;
-    debugger;
     return set;
   }
 
