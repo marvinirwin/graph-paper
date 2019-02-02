@@ -28,9 +28,15 @@
                   :key="drawTree.uuid"
                   @click.exact="loadNodeChildren(drawTree.tree.node)"
                   @click.shift="$observables.editingNode$.next(drawTree.node.tree)"
-                  @createChild="createChild"
-            >
+                  @dragover="dragOver(node, $event)"
+                  @drag="dragEnd(node, $event)"
+                  @createChild="createChild">
             </node>
+<!--            <node v-for="(drawTree, index) in mainDrawTreeElements$"
+                  style="opacity: 50%;"
+                  :drawTree="drawTree"
+                  :key="drawTree.uuid">
+            </node>-->
         </div>
     </div>
 </template>
@@ -47,16 +53,14 @@
   import {VueQuillEditor} from 'vue-quill-editor';
   import {
     createChildrenFromSetOfVNestedSetsGraph,
-    depthFirst,
-    DrawTree,
+    depthFirst, depthFirstExcludeTree,
     Net,
     Node,
-    NodeLoneWidth,
     ScaleX,
     ScaleY,
   } from './node';
-  import {BehaviorSubject} from 'rxjs';
-  import {map, pluck} from 'rxjs/operators';
+  import {BehaviorSubject, Subject} from 'rxjs';
+  import {map, pluck, throttleTime} from 'rxjs/operators';
 
   /*  import {lex, WordNode, lexers} from './persian-lexer';*/
 
@@ -96,6 +100,17 @@
     return {index: i + 1, color: colorWheel[i]};
   }
 
+  function applyColorWheel(drawTrees) {
+    const root = drawTrees.find(t => !t.parent);
+    let i = 0;
+    drawTrees.filter(t => t.parent === root)
+      .forEach(c => {
+        let {index, color} = getColorWheelColor(i);
+        depthFirst(c, node => node.color = color);
+        i = index;
+      });
+  }
+
   const movingNodes = {};
 
   /**
@@ -107,10 +122,12 @@
    */
   async function moveNode(n, startX, startY, endX, endY) {
     if (!n.component) {
-      debugger;throw new Error("Move called with no component!")
+      debugger;
+      throw new Error('Move called with no component!');
     }
-/*    console.log(n, startX, startY, endX, endY);*/
-    if (startX === endX && startY === endY) {
+    /*    console.log(n, startX, startY, endX, endY);*/
+    // If we don't have to move AND we haven't moved yet
+    if (startX === endX && startY === endY && !n.previousX) {
       return;
     }
 
@@ -124,13 +141,13 @@
       console.log('Node is being moved twice!');
     }
 
-    // First make sure the node is where want it
+/*    // First make sure the node is where want it
     const newCss = n.beAtPosition(startX, startY);
-/*    console.log(newCss);*/
+    /!*    console.log(newCss);*!/
     n.repositions$.next(newCss);
-    await sleep(0);
+    await sleep(0);*/
     const newGoToCss = n.goToPosition(startX, startY, endX, endY);
-/*    console.log(newGoToCss);*/
+    /*    console.log(newGoToCss);*/
     n.repositions$.next(newGoToCss);
     await sleep(0);
     return n.repositions$.getValue();
@@ -168,8 +185,23 @@
        * @type {BehaviorSubject<Node>}
        */
       const nodes$ = new BehaviorSubject([]);
+      const shadowDrawTree$ = new BehaviorSubject(undefined);
+      const shadowNodes$ = shadowDrawTree$.pipe(map(t => t && t.allGraph()));
+      // Copy the nst
       const mainGraph = new Net(nodes$, n => n, 'Main');
-      const shadowGraph = new Net(nodes$, n => n, 'Shadow');
+/*      const shadowGraph = new Net(shadowNodes$, n => n, 'Shadow');*/
+      const dragOver$ = new Subject();
+      dragOver$.pipe(throttleTime(1500)).subscribe(({node, event}) => {
+        // Do the shadow graph now.  This would be changing the drawTree?
+        // Since the Nets are created from the same source nodes I can't change it.
+        // This means I must keep two different sets of nodes, or atl east create a new one once I want a shadow net
+        // And sync them manually on mount or on createChild and stuff
+
+        // So in order to clone nodes efficiently I have to take shallow copies of all of them
+        // ,but I must more throughly copy the ones in the tree getting moved?
+
+        // Maybe I can get around this by just using drawTrees without nodes
+      });
       /**
        * @type {Observable<DrawTree[]>}
        */
@@ -197,18 +229,46 @@
       editingNode$.subscribe(n => {
 
       });
+
+      const drawTreeMap = (t) => {
+        if (!t) return undefined;
+        const allGraphs = t.allGraph();
+        applyColorWheel(allGraphs);
+        setTimeout(() => {
+          allGraphs.forEach(g => {
+            if (!g.component) {
+              return;
+            }
+            if (g.previousX) {
+              /*              this.$nextTick().then(() =>
+                              moveNode(g, ScaleX(g.previousX), ScaleY(g.previousY), ScaleX(g.x), ScaleY(g.y))
+                            )*/
+              moveNode(g, ScaleX(g.previousX), ScaleY(g.previousY), ScaleX(g.x), ScaleY(g.y));
+            }
+          });
+        }, 100);
+        return allGraphs;
+      };
+
       return {
         nodes$,
         mainDrawTreeElements$:
-          mainGraph.mergedDrawTree$.pipe(map(t => /*console.log(t) ||*/ t &&  t.allGraph())),
-        shadowDrawTreeElements$:
-          shadowGraph.mergedDrawTree$.pipe(map(t => /*console.log(t) ||*/ t &&  t.allGraph())),
+          mainGraph.mergedDrawTree$.pipe(map(drawTreeMap)),
+/*        shadowDrawTreeElements$:
+          shadowGraph.mergedDrawTree$.pipe(map(drawTreeMap)),*/
         editingNode$,
         editor$,
         editingText$,
+        dragOver$
       };
     },
     methods: {
+      dragOver(node, event) {
+        this.$observables.dragOver$.next({node, event});
+      },
+      dragEnd(node, event) {
+        console.log(node, event);
+      },
       /**
        * @type {Node}
        */
@@ -234,7 +294,7 @@
               ScaleX(drawTreeElement.previousX),
               ScaleY(drawTreeElement.previousY),
               ScaleX(drawTreeElement.x),
-              ScaleY(drawTreeElement.y))
+              ScaleY(drawTreeElement.y));
           }
         }
       },
@@ -244,45 +304,62 @@
       async repositionDrawTreeRoot(drawTreeElements) {
         // Maybe the root is always the first one and I don't have to do this
         const root = drawTreeElements.find(n => !n.parent);
-        drawTreeElements.map(e => positionNode(e, ScaleX(root.x), ScaleY(root.y)));
-        await sleep(1001);
+        drawTreeElements.map(e => positionNode(e, root.pixelX(), root.pixelY()));
         drawTreeElements.map(e => moveNode(e,
-          ScaleX(root.x),
-          ScaleY(root.y),
-          ScaleX(e.x),
-          ScaleY(e.y)));
+          root.pixelX(),
+          root.pixelY(),
+          e.pixelX(),
+          e.pixelY()));
+        drawTreeElements.map(e => positionNode(e, e.pixelX(), e.pixelY()))
       },
       /**
        * @type {DrawTree}
        */
-      repositionDrawTreeRecursive(drawTree) {
-        // First move the parent where it has to go
+      async repositionDrawTreeRecursive(drawTree) {
+        // Move everyone in the same way as the parent
+        depthFirst(drawTree, n => moveNode(n, drawTree.previousPixelX(), drawTree.previousPixelY(), drawTree.pixelX(), drawTree.pixelY()));
+        await this.$nextTick();
+
+
+/*        drawTree.children.forEach(c => depthFirst(c, n => moveNode(n, n.parent.pixelX(), n.parent.pixelY(), n.pixelX(), n.pixelY())));*/
+/*        depthFirst(drawTree, n => moveNode(n, n.))*/
+
+        // How to find the highest member of this tree?
+        // Perhaps it's the first element?
         function move(expandee, depth) {
           setTimeout(() => {
             const startX = ScaleX(expandee.parent.x);
             const startY = ScaleY(expandee.parent.y);
             const endX = ScaleX(expandee.x);
             const endY = ScaleY(expandee.y);
-            debugger;
-            moveNode(
-              expandee,
-              startX,
-              startY,
-              endX,
-              endY);
+            const allNodes = expandee.allGraph();
+            allNodes.map(n =>
+              moveNode(
+                n,
+                startX,
+                startY,
+                endX,
+                endY));
 
             expandee.children.forEach(c => {
               move(c, depth + 1);
             });
+
           }, 1000);
         }
-        move(drawTree, 0);
+
+
+        drawTree.children.map(c => {
+          move(c, 1);
+        });
+
       },
       /**
        * @type {Node}
        */
       async loadNodeChildren(n) {
         // Get graphs, create a tree out of them
+        n.loading$.next(true);
         const resultSets = await r.fetchNodesBelow(n.id);
         const root = resultSets.find(s => s.lft === 1);
         createChildrenFromSetOfVNestedSetsGraph(root, resultSets);
@@ -302,11 +379,34 @@
         this.$observables.nodes$.next(this.$observables.nodes$.getValue().concat(...newNodes));
         root.nodeId = parseInt(root.nodeId, 10);
         // Find the root in the main drawTree
-        await sleep(1000);
-        const mainRoot = this.mainDrawTreeElements$.find(e => {
-          return e.tree.node.id === root.nodeId
+/*        await this.$nextTick();*/
+        const allDrawTrees = this.mainDrawTreeElements$;
+        const mainRoot = allDrawTrees.find(e => {
+          return e.tree.node.id === root.nodeId;
         });
-        this.repositionDrawTreeRecursive(mainRoot);
+/*        this.repositionDrawTreeRecursive(mainRoot);*/
+        mainRoot.oldPreviousPlacedMove();
+
+        function moveRecursive(n) {
+          function move(expandee, depth) {
+            setTimeout(() => {
+              expandee.oldMoveFromLocation(
+                expandee.parent.pixelX(),
+                expandee.parent.pixelY(),
+                expandee.pixelX(),
+                expandee.pixelY()
+              )
+            }, 1000 * depth);
+          }
+          depthFirst(n, move)
+        }
+
+        mainRoot.children.forEach(moveRecursive);
+
+        depthFirstExcludeTree(allDrawTrees.find(t => !t.parent), mainRoot, e => e.oldPreviousPlacedMove());
+
+
+        n.loading$.next(false);
       },
       async importJson() {
         const v = JSON.parse(this.importText);
@@ -327,26 +427,17 @@
         }
       });
       (async () => {
-        let i = 0;
         const root = new Node({text: 'root'});
         let results = await r.fetchSources();
         results.forEach(r => r.parent = root);
         results = results.map(r => new Node(r));
         root.children = results;
-        // Do the color wheel here, for now
-        this.$observables.nodes$.subscribe(nodes => {
-          /**
-           * @type {Node}
-           */
-          nodes.filter(n => n.parent === root)
-            .forEach(c => {
-              let {index, color} = getColorWheelColor(i);
-              depthFirst(c, node => node.color = color);
-              i = index;
-            })
-        });
         this.$observables.nodes$.next(results.concat(root));
-        this.repositionDrawTreeRoot(this.mainDrawTreeElements$);
+        // Get out drawTrees
+        await this.$nextTick();
+        this.mainDrawTreeElements$.forEach(e => e.oldNewPlacedMove());
+/*        await this.$nextTick();*/
+/*        this.repositionDrawTreeRoot(this.mainDrawTreeElements$);*/
       })();
     },
     computed: {},

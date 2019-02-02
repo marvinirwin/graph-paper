@@ -80,6 +80,7 @@ export class Node {
      * @type {Node}
      */
     this.parent = o.parent || undefined;
+    this.loading$ = new BehaviorSubject(false);
 
     // implement max character limit for title
     /*    this.pixelX = o.pixelX || undefined;
@@ -141,7 +142,13 @@ export class Net {
       if (!oldTree.allGraph) {
         debugger;console.log();
       }
+      /**
+       * @type {DrawTree[]}
+       */
       const oldNodes = oldTree.allGraph();
+      /**
+       * @type {DrawTree[]}
+       */
       const newNodes = newTree.allGraph();
       for (let i = 0; i < newNodes.length; i++) {
         const newNode = newNodes[i];
@@ -149,6 +156,7 @@ export class Net {
         if (oldNode) {
           newNode.previousX = oldNode.x;
           newNode.previousY = oldNode.y;
+          newNode.repositions$.next(oldNode.repositions$.getValue());
         }
       }
       return newTree;
@@ -258,9 +266,15 @@ export function mergeLoadedSetsIntoTree(originalNodes, newNodes, parentNode) {
  * All nodes will be drawTrees eventually
  */
 
-export function depthFirst(n, f) {
+export function depthFirst(n, f, depth=0) {
+  n.children.forEach(c => depthFirst(c, f, depth + 1));
+  f(n, depth);
+}
+
+export function depthFirstExcludeTree(n, e, f) {
+  if (e === n) return;
+  n.children.forEach(c => depthFirstExcludeTree(c, e, f));
   f(n);
-  n.children.map(c => depthFirst(c, f));
 }
 
 export class DrawTree {
@@ -295,6 +309,8 @@ export class DrawTree {
     this.previousY = undefined;
 
     this.repositions$ = new BehaviorSubject('');
+    this.color = null;
+    this.oldStyle = '';
   }
 
   allGraph(arr = []) {
@@ -352,7 +368,7 @@ export class DrawTree {
         transition: all 1s;
         left: ${ScaleX(this.x)}px;
         top: ${ScaleY(this.y)}px;
-        color: ${this.tree.node.color};
+        color: ${this.color};
         transform: translate(
         ${0}px,
         ${0}px);
@@ -368,7 +384,7 @@ export class DrawTree {
         left: ${startX}px;
         top: ${startY}px;
         transition: all 1s;
-        color: ${this.tree.color};
+        color: ${this.color};
     `;
   }
 
@@ -379,8 +395,104 @@ export class DrawTree {
     return `
         left: ${x}px;
         top: ${y}px;
-        color: ${this.tree.node.color};`;
+        color: ${this.color};`;
 
+  }
+
+  /**
+   * Use this to move nodes out of the way
+   */
+  oldPreviousPlacedMove() {
+    this.oldStyle = `
+        transition: all 1s;
+        left: ${this.previousPixelX()}px;
+        top: ${this.previousPixelY()}px;
+        color: ${this.color};
+        `;
+        setTimeout(() => {
+          const startX = this.previousPixelX();
+          const destX = this.pixelX();
+          const startY = this.previousPixelY();
+          const destY = this.pixelY();
+          let transformX = destX - startX;
+          let transformY = destY - startY;
+          this.oldStyle = `
+        transition: all 1s;
+        left: ${this.previousPixelX()}px;
+        top: ${this.previousPixelY()}px;
+        color: ${this.color};
+        transform: translate(${transformX}px, ${transformY}px);
+        `;
+        }, 0);
+  }
+  oldMoveFromLocation(startX, startY, endX, endY) {
+    this.oldStyle = `
+        transition: all 1s;
+        left: ${startX}px;
+        top: ${startY}px;
+        color: ${this.color};
+        `;
+    setTimeout(() => {
+/*      const startX = this.previousPixelX();
+      const destX = this.pixelX();
+      const startY = this.previousPixelY();
+      const destY = this.pixelY();*/
+      let transformX = endX - startX;
+      let transformY = endY - startY;
+      this.oldStyle = `
+        transition: all 1s;
+        left: ${startX}px;
+        top: ${startY}px;
+        color: ${this.color};
+        transform: translate(${transformX}px, ${transformY}px);
+        `;
+    }, 0);
+  }
+
+  /**
+   * Use this to move nodes from inside their parent to outside
+   */
+  oldNewPlacedMove() {
+    let x, y;
+      if (!this.parent) {
+        x = this.pixelX();
+        y = this.pixelY();
+      } else {
+        x = this.parent.pixelX();
+        y = this.parent.pixelY();
+      }
+      // If we haven't been placed, have us start inside of our parent
+      this.oldStyle = `
+        transition: all 1s;
+        left: ${x}px;
+        top: ${y}px;
+        color: ${this.color};
+        transform: translate(
+        ${x}px,
+        ${y}px);
+        `;
+      setTimeout(() => {
+        this.oldStyle = `
+        transition: all 1s;
+        left: ${x}px;
+        top: ${y}px;
+        transform: translate(${this.pixelX() - x}px, ${this.pixelY() - y}px);
+        color: ${this.color};
+          `;
+      }, 0);
+  }
+
+  previousPixelX() {
+    return ScaleX(this.previousX);
+  }
+  previousPixelY() {
+    return ScaleY(this.previousY);
+  }
+  pixelX() {
+    return ScaleX(this.x);
+  }
+  pixelY() {
+    return ScaleY(this.y);
   }
 }
 

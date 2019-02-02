@@ -1,21 +1,29 @@
 <template>
     <div ref="root"
          class="node"
+         :class="{loading: loading$}"
+         :id="drawTree.tree.node.id"
          @mouseenter="handleMouseEnter"
          @mouseleave="handleMouseLeave"
          draggable="true"
-         :style="computedStyle"
+         @drop="handleDrop"
+         @dragEnter="dragEnter"
+         @dragLeave="dragLeave"
+         :style="oldStyle"
          @click="$emit('click', $event)">
         <!--        <span>{{drawTree.x}}, {{drawTree.y}}, {{node.nodeId}}</span>-->
         {{drawTree.tree.node.title}}
-<!--        <div class="node new-node"
-             :class="{'show': showButtons}"
-             @click.stop="$emit('createChild', node)">+
-        </div>-->
+        <!--        <div class="node new-node"
+                     :class="{'show': showButtons}"
+                     @click.stop="$emit('createChild', node)">+
+                </div>-->
     </div>
 </template>
 
 <script>
+  import {map, throttleTime, delay, concatMap, filter} from 'rxjs/operators';
+  import {zip, interval, Subject, of, concat} from 'rxjs';
+
   export default {
     name: 'node',
     props: {
@@ -24,29 +32,38 @@
        */
       drawTree: Object,
     },
+    computed: {
+      id: function() {
+        return this.drawTree.tree.node.id;
+      },
+      oldStyle: function() {
+        return this.drawTree.oldStyle;
+      },
+    },
     data() {
       const o = {
-/*        computedStyle: '',*/
+        /*        computedStyle: '',*/
         showButtons: false,
       };
-/*      this.drawTree.repositions$.subscribe(v => {
-        console.log(v);
-        o.computedStyle = v;
-      });*/
+      /*      this.drawTree.repositions$.subscribe(v => {
+              console.log(v);
+              o.computedStyle = v;
+            });*/
       return o;
     },
     mounted() {
     },
     created() {
       if (this.drawTree.component) {
-        debugger;console.log();throw new Error("Two components for one drawTree?");
+        debugger;
+        console.log();
+        throw new Error('Two components for one drawTree?');
       }
       this.drawTree.component = this;
     },
     destroyed() {
       this.drawTree.component = undefined;
     },
-    computed: {},
     methods: {
       handleMouseEnter() {
         this.showButtons = true;
@@ -54,11 +71,28 @@
       handleMouseLeave() {
         this.showButtons = false;
       },
+      handleDrop(e) {
+        debugger;
+        console.log(e);
+      },
+      dragEnter(e) {
+        debugger;
+        console.log(e);
+      },
+      dragLeave(e) {
+        debugger;
+        console.log(e);
+      },
     },
     subscriptions() {
       return {
-        computedStyle: this.drawTree.repositions$
-      }
+        computedStyle: this.drawTree.repositions$.pipe(
+          concatMap(x => {
+            return concat(of(x), of('').pipe(delay(1500)));
+          }),
+          filter(x => x)),
+        loading$: this.drawTree.tree.node.loading$,
+      };
     },
     watch: {},
   };
@@ -76,12 +110,12 @@
         font-size: 20px;
         border-style: solid;
         border-width: 1px;
-        width: 240px;
-        height: 80px;
-        /*        min-width: 240px;
-                max-width: 240px;
-                min-height: 80px;
-                max-height: 80px;*/
+        /*        width: 240px;
+                height: 80px;*/
+        min-width: 240px;
+        max-width: 240px;
+        min-height: 80px;
+        max-height: 80px;
     }
 
     .node:hover {
@@ -104,6 +138,9 @@
     .node.new-node.show:hover {
         box-shadow: 0 0 0 2px grey;
         text-shadow: 0 0 0 2px grey;
+    }
 
+    .node.loading {
+        font-size: 200%;
     }
 </style>
