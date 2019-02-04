@@ -44,6 +44,17 @@ export class BasicNode {
     this.parent = parent;
     this.children = children;
     this.node = node;
+
+    this.text = this.node.text;
+  }
+
+  find(predicate) {
+    if (predicate(this)) return this;
+    return this.children.find(c => c.find(predicate));
+  }
+
+  clone() {
+    return new BasicNode(this.id, this.parent, [...this.children.map(c => c.clone())], this.node);
   }
 }
 
@@ -97,7 +108,8 @@ export class Node {
       this.parent,
       this.children.map(c => {
         if (!c.toBasicNodeTree) {
-          debugger;console.log();
+          debugger;
+          console.log();
         }
         return c.toBasicNodeTree();
       }),
@@ -117,6 +129,35 @@ export class Node {
 }
 
 export class Net {
+  static MergeDrawTreeMap(oldTree, newTree) {
+    /*    console.log(`MergeDrawTreeMap oldTree: ${!!oldTree} newTree: ${!!newTree}`);*/
+    if (!oldTree) {
+      return newTree;
+    }
+    if (!oldTree.allGraph) {
+      debugger;
+      console.log();
+    }
+    /**
+     * @type {DrawTree[]}
+     */
+    const oldNodes = oldTree.allGraph();
+    /**
+     * @type {DrawTree[]}
+     */
+    const newNodes = newTree.allGraph();
+    for (let i = 0; i < newNodes.length; i++) {
+      const newNode = newNodes[i];
+      const oldNode = oldNodes && oldNodes.find(o => o.tree.id === newNode.tree.id);
+      if (oldNode) {
+        newNode.previousX = oldNode.x;
+        newNode.previousY = oldNode.y;
+        newNode.repositions$.next(oldNode.repositions$.getValue());
+      }
+    }
+    return newTree;
+  }
+
   constructor(nodes$, nodesTransform, name) {
     /**
      * @type {string}
@@ -128,39 +169,17 @@ export class Net {
     this.nodes$ = nodes$;
     // This is the function which
     this.basicNodeMap = nodesTransform;
-    this.drawTree$ = this.nodes$.pipe(map(nodes => {
+    this.basicNodeTree$ = this.nodes$.pipe(map(nodes => {
       /**
        * @type {Node}
        */
       const root = nodes.find(n => !n.parent);
-      return root ? buchheim(root.toBasicNodeTree()) : undefined;
+      return root && root.toBasicNodeTree();
     }));
-    this.mergedDrawTree$ = this.drawTree$.pipe(scan((oldTree, newTree) => {
-      if (!oldTree) {
-        return newTree;
-      }
-      if (!oldTree.allGraph) {
-        debugger;console.log();
-      }
-      /**
-       * @type {DrawTree[]}
-       */
-      const oldNodes = oldTree.allGraph();
-      /**
-       * @type {DrawTree[]}
-       */
-      const newNodes = newTree.allGraph();
-      for (let i = 0; i < newNodes.length; i++) {
-        const newNode = newNodes[i];
-        const oldNode = oldNodes && oldNodes.find(o => o.tree.id === newNode.tree.id);
-        if (oldNode) {
-          newNode.previousX = oldNode.x;
-          newNode.previousY = oldNode.y;
-          newNode.repositions$.next(oldNode.repositions$.getValue());
-        }
-      }
-      return newTree;
+    this.drawTree$ = this.basicNodeTree$.pipe(map(basicRoot => {
+      return basicRoot && buchheim(basicRoot);
     }));
+    this.mergedDrawTree$ = this.drawTree$.pipe(scan(Net.MergeDrawTreeMap));
   }
 }
 
@@ -266,7 +285,7 @@ export function mergeLoadedSetsIntoTree(originalNodes, newNodes, parentNode) {
  * All nodes will be drawTrees eventually
  */
 
-export function depthFirst(n, f, depth=0) {
+export function depthFirst(n, f, depth = 0) {
   n.children.forEach(c => depthFirst(c, f, depth + 1));
   f(n, depth);
 }
@@ -288,7 +307,8 @@ export class DrawTree {
      */
     this.component = null;
     if (!tree) {
-      debugger;console.log();
+      debugger;
+      console.log();
     }
     this.x = -1.;
     this.y = depth;
@@ -402,30 +422,37 @@ export class DrawTree {
   /**
    * Use this to move nodes out of the way
    */
-  oldPreviousPlacedMove() {
+  moveFromPreviousPositionToNewPosition() {
     this.oldStyle = `
         transition: all 1s;
         left: ${this.previousPixelX()}px;
         top: ${this.previousPixelY()}px;
         color: ${this.color};
         `;
-        setTimeout(() => {
-          const startX = this.previousPixelX();
-          const destX = this.pixelX();
-          const startY = this.previousPixelY();
-          const destY = this.pixelY();
-          let transformX = destX - startX;
-          let transformY = destY - startY;
-          this.oldStyle = `
+    setTimeout(() => {
+      const startX = this.previousPixelX();
+      const destX = this.pixelX();
+      const startY = this.previousPixelY();
+      const destY = this.pixelY();
+      let transformX = destX - startX;
+      let transformY = destY - startY;
+      this.oldStyle = `
         transition: all 1s;
         left: ${this.previousPixelX()}px;
         top: ${this.previousPixelY()}px;
         color: ${this.color};
         transform: translate(${transformX}px, ${transformY}px);
         `;
-        }, 0);
+    }, 0);
   }
-  oldMoveFromLocation(startX, startY, endX, endY) {
+
+  /**
+   * @param startX
+   * @param startY
+   * @param endX
+   * @param endY
+   */
+  moveFromLocationToLocation(startX, startY, endX, endY) {
     this.oldStyle = `
         transition: all 1s;
         left: ${startX}px;
@@ -433,10 +460,10 @@ export class DrawTree {
         color: ${this.color};
         `;
     setTimeout(() => {
-/*      const startX = this.previousPixelX();
-      const destX = this.pixelX();
-      const startY = this.previousPixelY();
-      const destY = this.pixelY();*/
+      /*      const startX = this.previousPixelX();
+            const destX = this.pixelX();
+            const startY = this.previousPixelY();
+            const destY = this.pixelY();*/
       let transformX = endX - startX;
       let transformY = endY - startY;
       this.oldStyle = `
@@ -454,15 +481,15 @@ export class DrawTree {
    */
   oldNewPlacedMove() {
     let x, y;
-      if (!this.parent) {
-        x = this.pixelX();
-        y = this.pixelY();
-      } else {
-        x = this.parent.pixelX();
-        y = this.parent.pixelY();
-      }
-      // If we haven't been placed, have us start inside of our parent
-      this.oldStyle = `
+    if (!this.parent) {
+      x = this.pixelX();
+      y = this.pixelY();
+    } else {
+      x = this.parent.pixelX();
+      y = this.parent.pixelY();
+    }
+    // If we haven't been placed, have us start inside of our parent
+    this.oldStyle = `
         transition: all 1s;
         left: ${x}px;
         top: ${y}px;
@@ -471,31 +498,48 @@ export class DrawTree {
         ${x}px,
         ${y}px);
         `;
-      setTimeout(() => {
-        this.oldStyle = `
+    setTimeout(() => {
+      this.oldStyle = `
         transition: all 1s;
         left: ${x}px;
         top: ${y}px;
         transform: translate(${this.pixelX() - x}px, ${this.pixelY() - y}px);
         color: ${this.color};
           `;
-      }, 0);
+    }, 0);
   }
 
   previousPixelX() {
     return ScaleX(this.previousX);
   }
+
   previousPixelY() {
     return ScaleY(this.previousY);
   }
+
   pixelX() {
     return ScaleX(this.x);
   }
+
   pixelY() {
     return ScaleY(this.y);
   }
+
+  find(predicate) {
+    for (let i = 0; i < this.children.length; i++) {
+      const child = this.children[i];
+      const r = child.find(predicate);
+      if (r) return r;
+    }
+
+    if (predicate(this)) return this;
+  }
 }
 
+/**
+ * @param tree
+ * @return {DrawTree}
+ */
 export function buchheim(tree) {
   const dt = firstwalk(new DrawTree(tree));
   const min = second_walk(dt);

@@ -13,7 +13,7 @@ const UrlNode = '/api/Nodes';
 const UrlNodeRevision = '/api/NodeRevisions';
 const UrlEdge = '/api/Edges';
 const UrlEdgeRevision = '/api/EdgeRevisions';
-const UrlVEdge = '/api/VEdge';
+const UrlVEdge = '/api/VEdges';
 
 export default class RequestManager {
   constructor() {
@@ -106,13 +106,22 @@ export default class RequestManager {
     }
   }
 
+  /**
+   * @param node {Node}
+   * @param newParentNodeId number
+   * @return {Promise<>}
+   */
   async moveNode(node, newParentNodeId) {
     // If we have no new parent then it becomes a root, so we must make the edge useless
-    const edgeToModify = (await axios.get(`${UrlVEdge}`, {params: {where: {n2: node.id}}})).data[0];
+    const edgeToModify = (await axios.get(`${UrlVEdge}`, {params: {filter: {where: {n2: node.id}}}})).data[0];
     if (!newParentNodeId) {
       const silenceRevision = (await axios.post(UrlEdgeRevision, {edgeId: edgeToModify.id, n1: undefined, n2: undefined})).data
     } else {
-      const changeRevision = (await axios.post(UrlEdgeRevision, {edgeId: edgeToModify.id, n1: node, n2: newParentNodeId})).data
+      const changeRevision = (await axios.post(UrlEdgeRevision, {
+        edgeId: edgeToModify.id,
+        n1: node.id,
+        n2: newParentNodeId
+      })).data
     }
     // Now our tree has been recomputed, grab us again
     const set = (await axios.get(UrlGraphs, {params: {where: {nodeId: node.id}}})).data[0];

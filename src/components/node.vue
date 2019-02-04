@@ -1,14 +1,15 @@
 <template>
     <div ref="root"
          class="node"
-         :class="{loading: loading$}"
+         :class="{loading: loading$, 'shadow': shadow}"
          :id="drawTree.tree.node.id"
          @mouseenter="handleMouseEnter"
          @mouseleave="handleMouseLeave"
+         @dragend="dragEnd(drawTree.tree.node, $event)"
+         @dragenter="dragEnter(drawTree.tree.node, $event)"
+         @dragleave="dragLeave(drawTree.tree.node, $event)"
+         @dragstart="dragStart(drawTree.tree.node, $event)"
          draggable="true"
-         @drop="handleDrop"
-         @dragEnter="dragEnter"
-         @dragLeave="dragLeave"
          :style="oldStyle"
          @click="$emit('click', $event)">
         <!--        <span>{{drawTree.x}}, {{drawTree.y}}, {{node.nodeId}}</span>-->
@@ -21,7 +22,7 @@
 </template>
 
 <script>
-  import {map, throttleTime, delay, concatMap, filter} from 'rxjs/operators';
+  import {map, throttleTime, delay, concatMap, filter, debounceTime} from 'rxjs/operators';
   import {zip, interval, Subject, of, concat} from 'rxjs';
 
   export default {
@@ -31,6 +32,7 @@
        * @type {DrawTree}
        */
       drawTree: Object,
+      shadow: Boolean
     },
     computed: {
       id: function() {
@@ -41,9 +43,15 @@
       },
     },
     data() {
+      const dragStatus$ = new Subject();
+      dragStatus$.pipe(debounceTime(500)).subscribe(v => {
+        console.log(v);
+        this.$emit('dragStatusChange', v);
+      });
       const o = {
         /*        computedStyle: '',*/
         showButtons: false,
+        dragStatus$,
       };
       /*      this.drawTree.repositions$.subscribe(v => {
               console.log(v);
@@ -71,17 +79,20 @@
       handleMouseLeave() {
         this.showButtons = false;
       },
-      handleDrop(e) {
-        debugger;
-        console.log(e);
+      dragOver(node, event) {
+        this.dragStatus$.next({node, event});
       },
-      dragEnter(e) {
-        debugger;
-        console.log(e);
+      dragLeave(node, event) {
+        this.$emit('nodeDragLeave', {node, event});
       },
-      dragLeave(e) {
-        debugger;
-        console.log(e);
+      dragStart(node, event) {
+        this.$emit('nodeDragStart', {node, event});
+      },
+      dragEnter(node, event) {
+        this.$emit('nodeDragEnter', {node, event});
+      },
+      dragEnd(node, event) {
+        this.$emit('nodeDragEnd', {node, event});
       },
     },
     subscriptions() {
@@ -142,5 +153,11 @@
 
     .node.loading {
         font-size: 200%;
+    }
+    .node.shadow {
+        z-index: 0;
+        color: grey;
+        border-color: grey;
+        opacity: 10%;
     }
 </style>

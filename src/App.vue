@@ -28,15 +28,22 @@
                   :key="drawTree.uuid"
                   @click.exact="loadNodeChildren(drawTree.tree.node)"
                   @click.shift="$observables.editingNode$.next(drawTree.node.tree)"
-                  @dragover="dragOver(node, $event)"
-                  @drag="dragEnd(node, $event)"
-                  @createChild="createChild">
+                  @createChild="createChild"
+                  @nodeDragStart="nodeDragStart"
+                  @nodeDragEnter="nodeDragEnter"
+                  @nodeDragEnd="nodeDragEnd"
+            >
             </node>
-<!--            <node v-for="(drawTree, index) in mainDrawTreeElements$"
-                  style="opacity: 50%;"
+            <node v-for="(drawTree, index) in shadowDrawTreeElements$"
                   :drawTree="drawTree"
+                  :shadow="true"
                   :key="drawTree.uuid">
-            </node>-->
+            </node>
+            <!--            <node v-for="(drawTree, index) in mainDrawTreeElements$"
+                              style="opacity: 50%;"
+                              :drawTree="drawTree"
+                              :key="drawTree.uuid">
+                        </node>-->
         </div>
     </div>
 </template>
@@ -58,9 +65,10 @@
     Node,
     ScaleX,
     ScaleY,
+    buchheim,
   } from './node';
-  import {BehaviorSubject, Subject} from 'rxjs';
-  import {map, pluck, throttleTime} from 'rxjs/operators';
+  import {BehaviorSubject, Subject, zip} from 'rxjs';
+  import {map, pluck, throttleTime, scan} from 'rxjs/operators';
 
   /*  import {lex, WordNode, lexers} from './persian-lexer';*/
 
@@ -141,11 +149,11 @@
       console.log('Node is being moved twice!');
     }
 
-/*    // First make sure the node is where want it
-    const newCss = n.beAtPosition(startX, startY);
-    /!*    console.log(newCss);*!/
-    n.repositions$.next(newCss);
-    await sleep(0);*/
+    /*    // First make sure the node is where want it
+        const newCss = n.beAtPosition(startX, startY);
+        /!*    console.log(newCss);*!/
+        n.repositions$.next(newCss);
+        await sleep(0);*/
     const newGoToCss = n.goToPosition(startX, startY, endX, endY);
     /*    console.log(newGoToCss);*/
     n.repositions$.next(newGoToCss);
@@ -178,18 +186,67 @@
         content: '',
         importText: '',
         email: getCookie('email'),
+        nodeBeingDragged: undefined,
+        elementUnderNodeBeingDragged: undefined,
       };
     },
     subscriptions() {
+      let lastBasicNodeTree;
+      // This hold the basic node which will be moved once the shadow tree is created
+      let basicNodeBeingMoved;
       /**
        * @type {BehaviorSubject<Node>}
        */
       const nodes$ = new BehaviorSubject([]);
-      const shadowDrawTree$ = new BehaviorSubject(undefined);
-      const shadowNodes$ = shadowDrawTree$.pipe(map(t => t && t.allGraph()));
       // Copy the nst
       const mainGraph = new Net(nodes$, n => n, 'Main');
-/*      const shadowGraph = new Net(shadowNodes$, n => n, 'Shadow');*/
+
+      mainGraph.basicNodeTree$.subscribe(v => lastBasicNodeTree = v);
+      // Holds the function which transforms the basicNodes before they get to the shaodw drawTree
+      const shadowNodeTransform$ = new BehaviorSubject(undefined);
+      const shadowDrawTree$ = shadowNodeTransform$
+        .pipe(
+          map(transformFunc => {
+            return {transformFunc, tree: lastBasicNodeTree && lastBasicNodeTree.clone()};
+          }),
+          map(({transformFunc, tree}) => {
+            /*            console.log(`transformFunc: ${!!transformFunc} tree: ${!!tree}`);*/
+            const transformResult = transformFunc && transformFunc(tree);
+            return transformFunc ? transformResult : {};
+          }),
+          map(({entireTree, subTreeToMove}) => {
+            if (!entireTree) return;
+            basicNodeBeingMoved = subTreeToMove;
+            const result = entireTree && Net.MergeDrawTreeMap(buchheim(lastBasicNodeTree), entireTree);
+            func(result);
+            return result;
+          }));
+
+      const func = shadowDrawTreeRoot => {
+        if (!shadowDrawTreeRoot) return;
+        // Now we have our drawTree, position all nodes except the one we're moving
+        const treeToExclude = basicNodeBeingMoved;
+        console.log(treeToExclude.tree.text);
+        /*        debugger;console.log();*/
+        depthFirstExcludeTree(
+          shadowDrawTreeRoot,
+          treeToExclude,
+          t => {
+            if (treeToExclude.tree.text === t.tree.text) {
+
+            }
+             t.oldStyle = t.beAtPosition(t.pixelX(), t.pixelY());
+          });
+        // Ok now we've positioned everyone except the nodes in our tree,
+        // move our node and all its children to its parent?
+/*        depthFirst(treeToExclude, t => {
+          t.oldStyle = t.beAtPosition(treeToExclude.parent.pixelX(), treeToExclude.parent.pixelY());
+        });
+        treeToExclude.children.forEach(c => this.moveRecursive(c));*/
+/*        this.moveRecursive(treeToExclude);*/
+      };
+      /*      shadowDrawTree$.subscribe();*/
+      /*      const shadowGraph = new Net(shadowNodes$, n => n, 'Shadow');*/
       const dragOver$ = new Subject();
       dragOver$.pipe(throttleTime(1500)).subscribe(({node, event}) => {
         // Do the shadow graph now.  This would be changing the drawTree?
@@ -229,11 +286,44 @@
       editingNode$.subscribe(n => {
 
       });
-
-      const drawTreeMap = (t) => {
+      const normalDrawTreeMap = t => {
         if (!t) return undefined;
+        if (!t.allGraph) {
+          debugger;
+          console.log();
+        }
         const allGraphs = t.allGraph();
         applyColorWheel(allGraphs);
+        setTimeout(() => {
+          /**
+           * @type {DrawTree}
+           */
+          allGraphs.forEach(g => {
+            if (!g.component) {
+              return;
+            }
+            if (g.previousX) {
+/*            this.$nextTick().then(() =>
+              moveNode(g, ScaleX(g.previousX), ScaleY(g.previousY), ScaleX(g.x), ScaleY(g.y))
+            )*/
+
+/*              moveNode(g, ScaleX(g.previousX), ScaleY(g.previousY), ScaleX(g.x), ScaleY(g.y));*/
+            }
+          });
+        }, 100);
+        return allGraphs;
+      };
+      const shadowDrawTreeMap = t => {
+        if (!t) return undefined;
+        if (!t.allGraph) {
+          debugger;
+          console.log();
+        }
+
+        const allGraphs = t.allGraph().filter(t =>
+          t.previousX !== t.x &&
+          t.previousY !== t.y
+        );
         setTimeout(() => {
           allGraphs.forEach(g => {
             if (!g.component) {
@@ -243,37 +333,128 @@
               /*              this.$nextTick().then(() =>
                               moveNode(g, ScaleX(g.previousX), ScaleY(g.previousY), ScaleX(g.x), ScaleY(g.y))
                             )*/
-              moveNode(g, ScaleX(g.previousX), ScaleY(g.previousY), ScaleX(g.x), ScaleY(g.y));
+              // moveNode(g, ScaleX(g.previousX), ScaleY(g.previousY), ScaleX(g.x), ScaleY(g.y));
             }
           });
         }, 100);
+
         return allGraphs;
       };
 
       return {
         nodes$,
-        mainDrawTreeElements$:
-          mainGraph.mergedDrawTree$.pipe(map(drawTreeMap)),
-/*        shadowDrawTreeElements$:
-          shadowGraph.mergedDrawTree$.pipe(map(drawTreeMap)),*/
+        mainDrawTreeBasicNodes$: mainGraph.basicNodeTree$,
+        mainDrawTreeElements$: mainGraph.mergedDrawTree$.pipe(map(normalDrawTreeMap)),
+        shadowDrawTreeElements$: shadowDrawTree$.pipe(map(normalDrawTreeMap)),
+        /*        shadowDrawTreeElements$:
+                  shadowGraph.mergedDrawTree$.pipe(map(drawTreeMap)),*/
         editingNode$,
         editor$,
         editingText$,
-        dragOver$
+        dragOver$,
+        shadowNodeTransform$,
       };
     },
     methods: {
-      dragOver(node, event) {
-        this.$observables.dragOver$.next({node, event});
+      nodeDragEnter({node, event}) {
+        this.elementUnderNodeBeingDragged = event.target;
+/*        if (this.currentlyDraggingNode.id === parseInt(this.elementUnderNodeBeingDragged.id, 10)) {
+          return;
+        }
+        const newParent= this.mainDrawTreeBasicNodes$.find(n => n.id === node.id);
+        const nodeToMove  = this.mainDrawTreeBasicNodes$.find(n => n.id === this.currentlyDraggingNode.id);
+        if (newParent === nodeToMove) {
+          console.log('Just doubled back into same node');
+          return;
+        }
+        if (newParent === nodeToMove.parent) {
+          console.log('Just put ourselves under our parent');
+          return;
+        }
+        if (!newParent || !nodeToMove) {
+          throw new Error('New parent or nodeToMove is undefined!');
+        }
+        this.mockChild(nodeToMove, newParent);*/
       },
-      dragEnd(node, event) {
-        console.log(node, event);
+      nodeDragStart({node, event}) {
+        this.currentlyDraggingNode = node;
+        this.elementUnderNodeBeingDragged = event.target;
+      },
+      nodeDragEnd({node, event}) {
+        this.changeNodeParent(node, this.nodes$.find(n => n.id + "" === this.elementUnderNodeBeingDragged.id));
+      },
+      /**
+       * @param nodeToMove {Node}
+       * @param newParent {Node}
+       */
+      async changeNodeParent(nodeToMove, newParent) {
+        newParent.loading$.next(true);
+        nodeToMove.loading$.next(true);
+        await r.moveNode(nodeToMove, newParent.id);
+        newParent.loading$.next(false);
+        nodeToMove.loading$.next(false);
+
+        nodeToMove.parent.children.splice(nodeToMove.parent.children.indexOf(nodeToMove), 1);
+        nodeToMove.parent = newParent;
+        newParent.children.push(nodeToMove);
+
+        this.$observables.nodes$.next(this.$observables.nodes$.getValue());
+        const allDrawTrees = this.mainDrawTreeElements$;
+        depthFirst(allDrawTrees.find(t => !t.parent), e => e.moveFromPreviousPositionToNewPosition());
+      },
+      /*      handleDragStatusChanged({node, event}) {
+              console.log(event.type);
+              if (event.toElement === event.target) {
+                console.log('src and target are the same');
+                return;
+              }
+              console.log('src and target are different');
+            },*/
+      /**
+       *
+       */
+      mockChild(nodeToMove, newParent) {
+        this.$observables.shadowNodeTransform$.next(basicNodeRoot => {
+          /**
+           *@type {BasicNode}
+           */
+          const basicNodeToMove = basicNodeRoot.find(n => n.node.id === nodeToMove.node.id);
+          /**
+           *@type {BasicNode}
+           */
+          const basicNewParent = basicNodeRoot.find(n => n.node.id === newParent.node.id);
+          // Remove me from my parent list
+          basicNodeToMove.parent.children.splice(basicNodeToMove.parent.children.indexOf(basicNodeToMove), 1);
+          // Then add me to my new parent
+          basicNodeToMove.parent = basicNewParent;
+          basicNewParent.children.push(basicNodeToMove);
+          const entireTree = buchheim(basicNodeRoot);
+          const subTreeToMove = entireTree.find(t => {
+            const result = t.tree.id === basicNodeToMove.id;
+            return result
+          });
+          return {entireTree, subTreeToMove};
+        });
       },
       /**
        * @type {Node}
        */
       handleNodeClick(node) {
         this.$observables.editingNode$.next(node);
+      },
+      moveRecursive(n) {
+        function move(expandee, depth) {
+          setTimeout(() => {
+            expandee.moveFromLocationToLocation(
+              expandee.parent.pixelX(),
+              expandee.parent.pixelY(),
+              expandee.pixelX(),
+              expandee.pixelY(),
+            );
+          }, 1000 * depth);
+        }
+
+        depthFirst(n, move);
       },
       /**
        * @param text {string}
@@ -310,7 +491,7 @@
           root.pixelY(),
           e.pixelX(),
           e.pixelY()));
-        drawTreeElements.map(e => positionNode(e, e.pixelX(), e.pixelY()))
+        drawTreeElements.map(e => positionNode(e, e.pixelX(), e.pixelY()));
       },
       /**
        * @type {DrawTree}
@@ -321,8 +502,8 @@
         await this.$nextTick();
 
 
-/*        drawTree.children.forEach(c => depthFirst(c, n => moveNode(n, n.parent.pixelX(), n.parent.pixelY(), n.pixelX(), n.pixelY())));*/
-/*        depthFirst(drawTree, n => moveNode(n, n.))*/
+        /*        drawTree.children.forEach(c => depthFirst(c, n => moveNode(n, n.parent.pixelX(), n.parent.pixelY(), n.pixelX(), n.pixelY())));*/
+        /*        depthFirst(drawTree, n => moveNode(n, n.))*/
 
         // How to find the highest member of this tree?
         // Perhaps it's the first element?
@@ -344,7 +525,6 @@
             expandee.children.forEach(c => {
               move(c, depth + 1);
             });
-
           }, 1000);
         }
 
@@ -379,32 +559,17 @@
         this.$observables.nodes$.next(this.$observables.nodes$.getValue().concat(...newNodes));
         root.nodeId = parseInt(root.nodeId, 10);
         // Find the root in the main drawTree
-/*        await this.$nextTick();*/
+        /*        await this.$nextTick();*/
         const allDrawTrees = this.mainDrawTreeElements$;
         const mainRoot = allDrawTrees.find(e => {
           return e.tree.node.id === root.nodeId;
         });
-/*        this.repositionDrawTreeRecursive(mainRoot);*/
-        mainRoot.oldPreviousPlacedMove();
+        /*        this.repositionDrawTreeRecursive(mainRoot);*/
+        mainRoot.moveFromPreviousPositionToNewPosition();
 
-        function moveRecursive(n) {
-          function move(expandee, depth) {
-            setTimeout(() => {
-              expandee.oldMoveFromLocation(
-                expandee.parent.pixelX(),
-                expandee.parent.pixelY(),
-                expandee.pixelX(),
-                expandee.pixelY()
-              )
-            }, 1000 * depth);
-          }
-          depthFirst(n, move)
-        }
+        mainRoot.children.forEach(this.moveRecursive);
 
-        mainRoot.children.forEach(moveRecursive);
-
-        depthFirstExcludeTree(allDrawTrees.find(t => !t.parent), mainRoot, e => e.oldPreviousPlacedMove());
-
+        depthFirstExcludeTree(allDrawTrees.find(t => !t.parent), mainRoot, e => e.moveFromPreviousPositionToNewPosition());
 
         n.loading$.next(false);
       },
@@ -436,8 +601,8 @@
         // Get out drawTrees
         await this.$nextTick();
         this.mainDrawTreeElements$.forEach(e => e.oldNewPlacedMove());
-/*        await this.$nextTick();*/
-/*        this.repositionDrawTreeRoot(this.mainDrawTreeElements$);*/
+        /*        await this.$nextTick();*/
+        /*        this.repositionDrawTreeRoot(this.mainDrawTreeElements$);*/
       })();
     },
     computed: {},
