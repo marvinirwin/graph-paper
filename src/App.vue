@@ -278,10 +278,10 @@
       const editor$ = new BehaviorSubject(undefined);
       const editingText$ = this.$watchAsObservable('content').pipe(pluck('newValue'));
       // Remove Quilll html tags
-      editingText$.pipe(debounceTime(1000)).subscribe(str => {
-        const editing = this.editingNode$;
+      editingText$.pipe(map(v => {return {text: v, node: this.editingNode$}}), debounceTime(1000)).subscribe(({text, node}) => {
+        const editing = node;
         if (editing) {
-          const newText = str ? str.replace(/<(?:.|\n)*?>/gm, '') : '';
+          const newText = text ? text.replace(/<(?:.|\n)*?>/gm, '') : '';
           console.log(newText, editing.text);
           if (newText !== editing.text) {
             editing.text = newText;
