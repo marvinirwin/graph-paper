@@ -1,4 +1,4 @@
-import {BehaviorSubject} from 'rxjs';
+import {BehaviorSubject, Subject} from 'rxjs';
 import axios from 'axios';
 
 class Message {
@@ -25,6 +25,25 @@ export default class RequestManager {
       return config;
 
     });
+
+    this.socket = new WebSocket('ws://localhost:3000/graph-changes');
+    this.socket.onmessage = event => {
+      const o = JSON.parse(event.data);
+      switch (o.messageType){
+        case "NODE_REVISION_CREATE":
+          this.nodeRevisionCreate$.next(o);
+          break;
+        case "EDGE_REVISION_CREATE":
+          this.edgeRevisionCreate$.next(o);
+          break;
+        default:
+          throw new Error('Bad message ' + JSON.stringify(event.data));
+      }
+    };
+
+    // When we create the websocket connection, use these to accept changes made by other people
+    this.nodeRevisionCreate$ = new Subject();
+    this.edgeRevisionCreate$ = new Subject();
   }
 
   addMessage(str) {
@@ -85,6 +104,17 @@ export default class RequestManager {
   }
 
   /**
+   * @param n {Node}
+   * @return {Promise<void>}
+   */
+  async createNodeRevision(n) {
+    await axios.post(UrlNodeRevision, {
+      nodeId: n.id,
+      text: n.text,
+    })
+  }
+
+  /**
    * This one can't return a set because the set will be gone
    * @param nodeId
    * @return {Promise<void>}
@@ -114,14 +144,27 @@ export default class RequestManager {
   async moveNode(node, newParentNodeId) {
     // If we have no new parent then it becomes a root, so we must make the edge useless
     const edgeToModify = (await axios.get(`${UrlVEdge}`, {params: {filter: {where: {n2: node.id}}}})).data[0];
-    if (!newParentNodeId) {
-      const silenceRevision = (await axios.post(UrlEdgeRevision, {edgeId: edgeToModify.id, n1: undefined, n2: undefined})).data
+    if (!edgeToModify) {
+      if (!newParentNodeId) {
+        // Does this mean somebody dragged a node which was already a root node to be a root node?
+        throw new Error('Node being moved is already a root node!');
+      }
+      const newEdge = (await axios.post(`${UrlEdge}`)).data;
+      const newRevision = await axios.post(`${UrlEdgeRevision}`, {
+        edgeId: newEdge.id,
+        n1: newParentNodeId,
+        n2: node.id
+      })
     } else {
-      const changeRevision = (await axios.post(UrlEdgeRevision, {
-        edgeId: edgeToModify.id,
-        n1: node.id,
-        n2: newParentNodeId
-      })).data
+      if (!newParentNodeId) {
+        const silenceRevision = (await axios.post(UrlEdgeRevision, {edgeId: edgeToModify.id, n1: undefined, n2: undefined})).data
+      } else {
+        const changeRevision = (await axios.post(UrlEdgeRevision, {
+          edgeId: edgeToModify.id,
+          n1: newParentNodeId,
+          n2: node.id
+        })).data
+      }
     }
     // Now our tree has been recomputed, grab us again
     const set = (await axios.get(UrlGraphs, {params: {where: {nodeId: node.id}}})).data[0];

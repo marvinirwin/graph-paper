@@ -12,6 +12,7 @@
          draggable="true"
          :style="oldStyle"
          @click="$emit('click', $event)">
+        <span style="position: absolute; top: -40px; align-self: center;">{{drawTree.tree.node.lastModified}}</span>
         <!--        <span>{{drawTree.x}}, {{drawTree.y}}, {{node.nodeId}}</span>-->
         {{drawTree.tree.node.title}}
         <!--        <div class="node new-node"
@@ -106,6 +107,11 @@
       };
     },
     watch: {},
+    filters: {
+      mDate(d) {
+        return d;
+      }
+    }
   };
 </script>
 

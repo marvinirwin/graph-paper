@@ -91,7 +91,14 @@ export class Node {
      * @type {Node}
      */
     this.parent = o.parent || undefined;
+    /**
+     * @type {BehaviorSubject<boolean>}
+     */
     this.loading$ = new BehaviorSubject(false);
+    /**
+     * @type {Date}
+     */
+    this.lastModified = o.lastModified || new Date();
 
     // implement max character limit for title
     /*    this.pixelX = o.pixelX || undefined;
@@ -130,6 +137,8 @@ export class Node {
 
 export class Net {
   static MergeDrawTreeMap(oldTree, newTree) {
+    depthFirst(newTree, t => t.children
+      .sort((a, b) => a.tree.node.lastModified < b.tree.node.lastModified));
     /*    console.log(`MergeDrawTreeMap oldTree: ${!!oldTree} newTree: ${!!newTree}`);*/
     if (!oldTree) {
       return newTree;

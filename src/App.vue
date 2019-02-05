@@ -10,8 +10,9 @@
                     @change="handleEditorChange"
             >
             </quill-editor>
-            <textarea id="import" v-model="importText"></textarea>
             <button @click="importJson">Import</button>
+            <button @click="exportJson">Export</button>
+            <textarea id="import" v-model="importText"></textarea>
         </div>
         <!--        <div>
                     <div id="editor-container">
@@ -23,18 +24,24 @@
                     </div>
                 </div>-->
         <div id="tree-container" ref="treeContainer">
-            <node v-for="(drawTree, index) in mainDrawTreeElements$"
+            <button
+                    style="position: absolute; top: 80px; left: 80px; width: 160px; height: 40px;"
+                    @click="createNode()"
+                    @dragenter="dragOverRoot = true"
+            >New Root</button>
+            <node v-for="(drawTree) in mainDrawTreeElements$"
                   :drawTree="drawTree"
                   :key="drawTree.uuid"
                   @click.exact="loadNodeChildren(drawTree.tree.node)"
-                  @click.shift="$observables.editingNode$.next(drawTree.node.tree)"
-                  @createChild="createChild"
+                  @click.shift="$observables.editingNode$.next(drawTree.tree.node)"
+                  @click.alt="createNode(drawTree.tree.node)"
+                  @createChild="createNode"
                   @nodeDragStart="nodeDragStart"
                   @nodeDragEnter="nodeDragEnter"
                   @nodeDragEnd="nodeDragEnd"
             >
             </node>
-            <node v-for="(drawTree, index) in shadowDrawTreeElements$"
+            <node v-for="(drawTree) in shadowDrawTreeElements$"
                   :drawTree="drawTree"
                   :shadow="true"
                   :key="drawTree.uuid">
@@ -67,8 +74,8 @@
     ScaleY,
     buchheim,
   } from './node';
-  import {BehaviorSubject, Subject, zip} from 'rxjs';
-  import {map, pluck, throttleTime, scan} from 'rxjs/operators';
+  import {BehaviorSubject, Subject} from 'rxjs';
+  import {map, pluck, throttleTime, debounceTime} from 'rxjs/operators';
 
   /*  import {lex, WordNode, lexers} from './persian-lexer';*/
 
@@ -188,6 +195,8 @@
         email: getCookie('email'),
         nodeBeingDragged: undefined,
         elementUnderNodeBeingDragged: undefined,
+        dragOverRoot: false,
+        rootNode: undefined
       };
     },
     subscriptions() {
@@ -269,11 +278,15 @@
       const editor$ = new BehaviorSubject(undefined);
       const editingText$ = this.$watchAsObservable('content').pipe(pluck('newValue'));
       // Remove Quilll html tags
-      editingText$.subscribe(str => {
-        const editing = editingNode$.getValue();
+      editingText$.pipe(debounceTime(10000)).subscribe(str => {
+        const editing = this.editingNode$;
         if (editing) {
-          editing.text = str.replace(/<(?:.|\n)*?>/gm, '');
-          editing.computeTitle();
+          const newText = str.replace(/<(?:.|\n)*?>/gm, '');
+          if (newText !== editing.text) {
+            editing.text = newText;
+            editing.computeTitle();
+            r.createNodeRevision(this.editingNode$);
+          }
         }
       });
       // Change content if there is a new node
@@ -281,10 +294,6 @@
         if (n) {
           this.content = n.text;
         }
-      });
-      // Attempt to fetch children if node has no children
-      editingNode$.subscribe(n => {
-
       });
       const normalDrawTreeMap = t => {
         if (!t) return undefined;
@@ -341,6 +350,9 @@
         return allGraphs;
       };
 
+      r.nodeRevisionCreate$.subscribe(v => this.acceptNewNodeRevision(v));
+      r.edgeRevisionCreate$.subscribe(v => this.acceptNewEdgeRevision(v));
+
       return {
         nodes$,
         mainDrawTreeBasicNodes$: mainGraph.basicNodeTree$,
@@ -356,7 +368,74 @@
       };
     },
     methods: {
+      /**
+       * @param newParentId {number}
+       * @param childId {number}
+       * This will move the child to the new parent node
+       * and divorce it from its current parent
+       */
+      relocateNodeById(newParentId, childId) {
+        console.log('relocateNodeById');
+        const newParent = this.nodes$.find(n => n.id === newParentId);
+        const child = this.nodes$.find(n => n.id ===childId);
+        if (!newParent || !child) {
+          throw new Error('Cannot relocate nodes by Ids, one or more participant is missing!');
+        }
+
+        child.parent.children.splice(child.parent.children.indexOf(child), 1);
+        child.parent = newParent;
+        child.parent.children.push(child);
+
+        this.$observables.nodes$.next(this.$observables.nodes$.getValue());
+        const allDrawTrees = this.mainDrawTreeElements$;
+        depthFirst(allDrawTrees.find(t => !t.parent), e => e.moveFromPreviousPositionToNewPosition());
+      },
+      makeNodeRootById(nodeId) {
+        const node = this.nodes$.find(n => n.id === nodeId);
+        node.parent.children.splice(node.parent.children.indexOf(node), 1);
+        this.root.children.push(node);
+/*        this.$observables.nodes$.next(this.nodes$);
+        const allDrawTrees = this.mainDrawTreeElements$;
+        depthFirst(allDrawTrees.find(t => !t.parent), e => e.moveFromPreviousPositionToNewPosition());*/
+      },
+      /**
+       * I don't know what this does yet
+       */
+      handleNewEdge({n1, n2}) {
+
+      },
+
+      acceptNewNodeRevision({nodeId, text}) {
+        // First check if we have that node, if we don't who cares
+        const thatNode = this.nodes$.find(n => n.id === nodeId);
+
+        if (!thatNode) {
+          console.log('received revision update, but i dont have node id: ' + nodeId);
+          return;
+        }
+        thatNode.text = text;
+
+        if (thatNode === this.editingNode$) {
+          console.log('Node updated is node being edited, setting content');
+          this.content = text;
+        }
+      },
+      acceptNewEdgeRevision({previousEdges, n1, n2}) {
+        let previousEdge = previousEdges.length ? previousEdges[0] : undefined;
+        if (!previousEdge) {
+          return this.handleNewEdge({n1, n2});
+        }
+
+        if (n1) {
+          // we are relocating the node
+          return this.relocateNodeById(n1, n2);
+        }
+
+        return this.makeNodeRootById(previousEdge.n2);
+      },
+
       nodeDragEnter({node, event}) {
+        this.dragOverRoot = false;
         this.elementUnderNodeBeingDragged = event.target;
 /*        if (this.currentlyDraggingNode.id === parseInt(this.elementUnderNodeBeingDragged.id, 10)) {
           return;
@@ -377,30 +456,39 @@
         this.mockChild(nodeToMove, newParent);*/
       },
       nodeDragStart({node, event}) {
+        this.dragOverRoot = false;
         this.currentlyDraggingNode = node;
         this.elementUnderNodeBeingDragged = event.target;
       },
       nodeDragEnd({node, event}) {
-        this.changeNodeParent(node, this.nodes$.find(n => n.id + "" === this.elementUnderNodeBeingDragged.id));
+        if (this.dragOverRoot) {
+          this.changeNodeParent(node);
+        } else {
+          this.changeNodeParent(node, this.nodes$.find(n => n.id + "" === this.elementUnderNodeBeingDragged.id));
+        }
       },
       /**
        * @param nodeToMove {Node}
        * @param newParent {Node}
        */
       async changeNodeParent(nodeToMove, newParent) {
-        newParent.loading$.next(true);
+        if (nodeToMove.parent === this.root && !newParent) {
+          console.log('Node is already a root, exiting changeNodeParent');
+          return;
+        }
+        newParent && newParent.loading$.next(true);
         nodeToMove.loading$.next(true);
-        await r.moveNode(nodeToMove, newParent.id);
-        newParent.loading$.next(false);
+        await r.moveNode(nodeToMove, newParent && newParent.id);
+        newParent && newParent.loading$.next(false);
         nodeToMove.loading$.next(false);
 
         nodeToMove.parent.children.splice(nodeToMove.parent.children.indexOf(nodeToMove), 1);
         nodeToMove.parent = newParent;
         newParent.children.push(nodeToMove);
 
-        this.$observables.nodes$.next(this.$observables.nodes$.getValue());
+/*        this.$observables.nodes$.next(this.$observables.nodes$.getValue());
         const allDrawTrees = this.mainDrawTreeElements$;
-        depthFirst(allDrawTrees.find(t => !t.parent), e => e.moveFromPreviousPositionToNewPosition());
+        depthFirst(allDrawTrees.find(t => !t.parent), e => e.moveFromPreviousPositionToNewPosition());*/
       },
       /*      handleDragStatusChanged({node, event}) {
               console.log(event.type);
@@ -437,11 +525,8 @@
         });
       },
       /**
-       * @type {Node}
+       * @type {DrawTree}
        */
-      handleNodeClick(node) {
-        this.$observables.editingNode$.next(node);
-      },
       moveRecursive(n) {
         function move(expandee, depth) {
           setTimeout(() => {
@@ -551,7 +636,8 @@
           node.children = n.children.map(createNodes);
           return node;
         };
-        n.children = root.children.map(createNodes);
+        // Get all our children except the ones we already have
+        n.children = root.children.map(createNodes).filter(c => !c.children.includes(n));
         n.children.map(c => c.parent = n);
 
         // Now newNodes is full of nodes, push them into our list of nodes,
@@ -573,15 +659,46 @@
 
         n.loading$.next(false);
       },
+      async exportJson() {
+        const v = JSON.stringify(this.mainDrawTreeBasicNodes$)
+        this.importText = v;
+      },
       async importJson() {
         const v = JSON.parse(this.importText);
         await r.importStructure(v);
       },
-      async createChild(n) {
-        const newChild = new Node(await r.createNode(n.nodeId || n.id));
-        n.children.push(newChild);
-        newChild.parent = n;
-        this.$observables.nodes$.next(this.nodes$.concat(newChild));
+      async createNode(n) {
+        n && n.loading$.next(true);
+        const newNode = new Node(await r.createNode(n && (n.nodeId || n.id)));
+        if (n) {
+          n.children.push(newNode);
+          newNode.parent = n;
+        } else {
+          this.root.children.push(newNode);
+          newNode.parent = this.root;
+        }
+        this.$observables.nodes$.next(this.nodes$.concat(newNode));
+        const allDrawTrees = this.mainDrawTreeElements$;
+        const newDrawTree = allDrawTrees.find(t => t.tree.id === newNode.id);
+        depthFirstExcludeTree(allDrawTrees.find(t => !t.parent), newDrawTree, e => e.moveFromPreviousPositionToNewPosition());
+        await sleep(1000);
+
+        let startDrawTree;
+        if (n) {
+          startDrawTree = allDrawTrees.find(t => t.tree.id === n.id);
+        } else {
+          startDrawTree = allDrawTrees.find(t => !t.parent);
+        }
+
+        newDrawTree.moveFromLocationToLocation(
+          startDrawTree.pixelX(),
+          startDrawTree.pixelY(),
+          newDrawTree.pixelX(),
+          newDrawTree.pixelY()
+        );
+
+        n && n.loading$.next(false);
+
       },
     },
     mounted() {
@@ -593,6 +710,7 @@
       });
       (async () => {
         const root = new Node({text: 'root'});
+        this.root = root;
         let results = await r.fetchSources();
         results.forEach(r => r.parent = root);
         results = results.map(r => new Node(r));
@@ -613,9 +731,22 @@
     @import "~quill/dist/quill.core.css";
     @import url(https://fonts.googleapis.com/css?family=Inconsolata);
 
+    body {
+        background-size: 40px 40px;
+        background-image: linear-gradient(to right, rgb(136, 199, 201) 1px, transparent 1px), linear-gradient(to bottom, rgb(136, 199, 201) 1px, transparent 1px);
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.07);
+        margin: 0;
+        font-family: monospace;
+    }
+
+    #tree-container {
+        position: relative;
+        top: -80px;
+    }
+
     #sidebar {
         background-color: white;
-        z-index: 1;
+        z-index: 2;
         height: 100vh;
         position: fixed;
         display: flex;
@@ -637,7 +768,7 @@
     }
 
     #sidebar.editing {
-        width: 480px;
+        width: 90%;
         transform: translateX(0);
     }
 
@@ -646,20 +777,9 @@
         background-color: white;
     }
 
-    body {
-        background-size: 40px 40px;
-        background-image: linear-gradient(to right, rgb(136, 199, 201) 1px, transparent 1px), linear-gradient(to bottom, rgb(136, 199, 201) 1px, transparent 1px);
-        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.07);
-        margin: 0;
-        font-family: monospace;
+    #import {
     }
 
-    #tree-container {
-        /*        display: flex;
-                flex-flow: row nowrap;
-                justify-content: center;*/
-        position: relative;
-    }
 
 
 </style>
