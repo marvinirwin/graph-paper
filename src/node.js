@@ -137,8 +137,12 @@ export class Node {
 
 export class Net {
   static MergeDrawTreeMap(oldTree, newTree) {
-    depthFirst(newTree, t => t.children
-      .sort((a, b) => a.tree.node.lastModified < b.tree.node.lastModified));
+    if (!newTree) {
+      debugger;console.log();
+    }
+    depthFirst(newTree, t =>
+      t.children .sort((a, b) => a.tree.node.lastModified < b.tree.node.lastModified)
+    );
     /*    console.log(`MergeDrawTreeMap oldTree: ${!!oldTree} newTree: ${!!newTree}`);*/
     if (!oldTree) {
       return newTree;
@@ -183,6 +187,9 @@ export class Net {
        * @type {Node}
        */
       const root = nodes.find(n => !n.parent);
+      if (!root) {
+        debugger;console.log();
+      }
       return root && root.toBasicNodeTree();
     }));
     this.drawTree$ = this.basicNodeTree$.pipe(map(basicRoot => {

@@ -401,17 +401,20 @@
       /**
        * I don't know what this does yet
        */
-      handleEdgeAppliedToRootById({newParentId, childId}) {
+      handleEdgeAppliedToRootById(newParentId, childId) {
         // This means the n2 was previously a root node
         const newParent = this.nodes$.find(n => n.id === newParentId);
         const child = this.nodes$.find(n => n.id ===childId);
+        debugger;
         if (!newParent || !child) {
           throw new Error('Cannot relocate nodes by Ids, one or more participant is missing!');
         }
 
+        child.parent.children.splice(child.parent.children.indexOf(child), 1);
         child.parent = newParent;
         child.parent.children.push(child);
 
+        debugger;
         this.$observables.nodes$.next(this.$observables.nodes$.getValue());
         const allDrawTrees = this.mainDrawTreeElements$;
         depthFirst(allDrawTrees.find(t => !t.parent), e => e.moveFromPreviousPositionToNewPosition());
@@ -436,7 +439,7 @@
         console.log('Accepting edge revision ', previousEdges, n1, n2);
         let previousEdge = previousEdges.length ? previousEdges[0] : undefined;
         if (!previousEdge) {
-          return this.handleEdgeAppliedToRootById({n1, n2});
+          return this.handleEdgeAppliedToRootById(n1, n2);
         }
 
         if (n1) {
