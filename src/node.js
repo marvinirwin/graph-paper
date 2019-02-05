@@ -187,9 +187,6 @@ export class Net {
        * @type {Node}
        */
       const root = nodes.find(n => !n.parent);
-      if (!root) {
-        debugger;console.log();
-      }
       return root && root.toBasicNodeTree();
     }));
     this.drawTree$ = this.basicNodeTree$.pipe(map(basicRoot => {

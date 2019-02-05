@@ -94,7 +94,7 @@ export default class RequestManager {
     // first create the node, then the edge
     const node = (await axios.post(UrlNode)).data;
     const nodeRevision = (await axios.post(UrlNodeRevision, {nodeId: node.id, text})).data;
-    if (parent) {
+    if (parentId) {
       const edge = (await axios.post(UrlEdge)).data;
       const edgeRevision = (await axios.post(UrlEdgeRevision, {edgeId: edge.id, n1: parentId, n2: node.id}));
     }

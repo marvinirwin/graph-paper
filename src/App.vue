@@ -1,6 +1,11 @@
 <template>
     <div id="app">
         <div id="sidebar" :class="{editing: editingNode$}">
+            <button
+                    @click="createNode()"
+                    @dragenter="dragOverRoot = true"
+                    @dragleave="dragOverRoot = false"
+            >New Root</button>
             <div>{{email || 'not logged in'}}</div>
             <a href="/auth/google" style="margin: 20px; font-size: 150%;">Sign in with google</a>
             <quill-editor
@@ -24,11 +29,6 @@
                     </div>
                 </div>-->
         <div id="tree-container" ref="treeContainer">
-            <button
-                    style="position: absolute; top: 80px; left: 80px; width: 160px; height: 40px;"
-                    @click="createNode()"
-                    @dragenter="dragOverRoot = true"
-            >New Root</button>
             <node v-for="(drawTree) in mainDrawTreeElements$"
                   :drawTree="drawTree"
                   :key="drawTree.uuid"
@@ -278,10 +278,11 @@
       const editor$ = new BehaviorSubject(undefined);
       const editingText$ = this.$watchAsObservable('content').pipe(pluck('newValue'));
       // Remove Quilll html tags
-      editingText$.pipe(debounceTime(10000)).subscribe(str => {
+      editingText$.pipe(debounceTime(1000)).subscribe(str => {
         const editing = this.editingNode$;
         if (editing) {
-          const newText = str.replace(/<(?:.|\n)*?>/gm, '');
+          const newText = str ? str.replace(/<(?:.|\n)*?>/gm, '') : '';
+          console.log(newText, editing.text);
           if (newText !== editing.text) {
             editing.text = newText;
             editing.computeTitle();
@@ -414,13 +415,12 @@
         child.parent = newParent;
         child.parent.children.push(child);
 
-        debugger;
         this.$observables.nodes$.next(this.$observables.nodes$.getValue());
         const allDrawTrees = this.mainDrawTreeElements$;
         depthFirst(allDrawTrees.find(t => !t.parent), e => e.moveFromPreviousPositionToNewPosition());
       },
 
-      acceptNewNodeRevision({nodeId, text}) {
+      async acceptNewNodeRevision({nodeId, text}) {
         // First check if we have that node, if we don't who cares
         const thatNode = this.nodes$.find(n => n.id === nodeId);
 
