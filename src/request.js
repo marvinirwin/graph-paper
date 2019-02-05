@@ -26,7 +26,7 @@ export default class RequestManager {
 
     });
 
-    this.socket = new WebSocket('ws://localhost:3000/graph-changes');
+    this.socket =  new WebSocket(((window.location.protocol === "https:") ? "wss://" : "ws://") + window.location.host + "/graph-changes");
     this.socket.onmessage = event => {
       const o = JSON.parse(event.data);
       switch (o.messageType){
