@@ -14,32 +14,39 @@ const UrlNodeRevision = '/api/NodeRevisions';
 const UrlEdge = '/api/Edges';
 const UrlEdgeRevision = '/api/EdgeRevisions';
 const UrlVEdge = '/api/VEdges';
+const UrlMoveNode = '/api/Nodes/moveNode';
+const UrlCreateNode = '/api/Nodes/createNode';
 
 export default class RequestManager {
   constructor() {
     this.user$ = new BehaviorSubject(undefined);
     this.messages$ = new BehaviorSubject(undefined);
-    axios.interceptors.request.use(function (config) {
+    axios.interceptors.request.use(function(config) {
       config.params = config.params || {};
       config.params.access_token = localStorage.getItem('access_token');
       return config;
 
     });
 
-    this.socket =  new WebSocket(((window.location.protocol === "https:") ? "wss://" : "ws://") + window.location.host + "/graph-changes");
+    this.socket = new WebSocket(((window.location.protocol === 'https:') ? 'wss://' : 'ws://') + window.location.host + '/graph-changes');
     this.socket.onmessage = event => {
       const o = JSON.parse(event.data);
-      switch (o.messageType){
-        case "NODE_REVISION_CREATE":
+      switch (o.messageType) {
+        case 'NODE_REVISION_CREATE':
           this.nodeRevisionCreate$.next(o);
           break;
-        case "EDGE_REVISION_CREATE":
+        case 'EDGE_REVISION_CREATE':
           this.edgeRevisionCreate$.next(o);
           break;
         default:
           throw new Error('Bad message ' + JSON.stringify(event.data));
       }
     };
+
+    this.wsConnectionState$ = new BehaviorSubject('CONNECTING');
+    this.socket.onopen = v => this.wsConnectionState$.next('OPEN');
+    this.socket.onclose = v => this.wsConnectionState$.next('CLOSED');
+    this.socket.onerror = v => this.wsConnectionState$.next('ERROR');
 
     // When we create the websocket connection, use these to accept changes made by other people
     this.nodeRevisionCreate$ = new Subject();
@@ -61,10 +68,14 @@ export default class RequestManager {
     /**
      * @type {VNestedSetsGraphSourceNode[]}
      */
-    const result = await axios.get(UrlSources, {params: {filter: {
-      where: {text: {neq: ''}, visible: true},
-      order: ['lastModified DESC', 'createdTimestamp DESC']
-    }}});
+    const result = await axios.get(UrlSources, {
+      params: {
+        filter: {
+          where: {text: {neq: ''}, visible: true},
+          order: ['lastModified DESC', 'createdTimestamp DESC'],
+        },
+      },
+    });
     result.data.forEach(sanitizeNestedSet);
     return result.data;
   }
@@ -75,7 +86,8 @@ export default class RequestManager {
    */
   async fetchNodesBelow(nodeId) {
     if (!nodeId) {
-      debugger;console.log();
+      debugger;
+      console.log();
     }
     /**
      * @type {VNestedSetsGraph[]}
@@ -91,6 +103,9 @@ export default class RequestManager {
    * @return {Promise<*>}
    */
   async createNode(parentId, text) {
+    const result  = await axios.post(UrlCreateNode, {parentId, text})
+    return result.data.node;
+
     // first create the node, then the edge
     const node = (await axios.post(UrlNode)).data;
     const nodeRevision = (await axios.post(UrlNodeRevision, {nodeId: node.id, text})).data;
@@ -111,7 +126,7 @@ export default class RequestManager {
     await axios.post(UrlNodeRevision, {
       nodeId: n.id,
       text: n.text,
-    })
+    });
   }
 
   /**
@@ -142,6 +157,7 @@ export default class RequestManager {
    * @return {Promise<>}
    */
   async moveNode(node, newParentNodeId) {
+    return await axios.post(UrlMoveNode, {node:{id: node.id, text: node.text} , newParentNodeId});
     // If we have no new parent then it becomes a root, so we must make the edge useless
     const edgeToModify = (await axios.get(`${UrlVEdge}`, {params: {filter: {where: {n2: node.id}}}})).data[0];
     if (!edgeToModify) {
@@ -153,17 +169,21 @@ export default class RequestManager {
       const newRevision = await axios.post(`${UrlEdgeRevision}`, {
         edgeId: newEdge.id,
         n1: newParentNodeId,
-        n2: node.id
-      })
+        n2: node.id,
+      });
     } else {
       if (!newParentNodeId) {
-        const silenceRevision = (await axios.post(UrlEdgeRevision, {edgeId: edgeToModify.id, n1: undefined, n2: undefined})).data
+        const silenceRevision = (await axios.post(UrlEdgeRevision, {
+          edgeId: edgeToModify.id,
+          n1: undefined,
+          n2: undefined,
+        })).data;
       } else {
         const changeRevision = (await axios.post(UrlEdgeRevision, {
           edgeId: edgeToModify.id,
           n1: newParentNodeId,
-          n2: node.id
-        })).data
+          n2: node.id,
+        })).data;
       }
     }
     // Now our tree has been recomputed, grab us again
@@ -176,6 +196,7 @@ export default class RequestManager {
   /!*        await axios.post(UrlNode UrlNodeRevision, {text});*!/
       }*/
 }
+
 /**
  *
  * @param s {VNestedSetsGraph}

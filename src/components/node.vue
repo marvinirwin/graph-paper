@@ -12,7 +12,7 @@
          draggable="true"
          :style="oldStyle"
          @click="$emit('click', $event)">
-        <span style="position: absolute; top: -40px; align-self: center;">{{drawTree.tree.node.lastModified}}</span>
+        <span style="position: absolute; top: -40px; align-self: center;">{{drawTree.tree.node.lastModified | mDate}}</span>
         <!--        <span>{{drawTree.x}}, {{drawTree.y}}, {{node.nodeId}}</span>-->
         {{drawTree.tree.node.title}}
         <!--        <div class="node new-node"
@@ -25,6 +25,7 @@
 <script>
   import {map, throttleTime, delay, concatMap, filter, debounceTime} from 'rxjs/operators';
   import {zip, interval, Subject, of, concat} from 'rxjs';
+  import * as moment from 'moment';
 
   export default {
     name: 'node',
@@ -109,7 +110,7 @@
     watch: {},
     filters: {
       mDate(d) {
-        return d;
+        return d && moment(d).format('YYYY-MM-DD');
       }
     }
   };

@@ -1,6 +1,7 @@
 <template>
     <div id="app">
         <div id="sidebar" :class="{editing: editingNode$}">
+            <div>Websocket: {{wsConnectionState$}}</div>
             <button
                     @click="createNode()"
                     @dragenter="dragOverRoot = true"
@@ -295,6 +296,9 @@
         if (n) {
           this.content = n.text;
         }
+
+        const ql = document.getElementsByClassName('ql-editor')[0];
+        ql && ql.focus();
       });
       const normalDrawTreeMap = t => {
         if (!t) return undefined;
@@ -355,6 +359,7 @@
       r.edgeRevisionCreate$.subscribe(v => this.acceptNewEdgeRevision(v));
 
       return {
+        wsConnectionState$: r.wsConnectionState$,
         nodes$,
         mainDrawTreeBasicNodes$: mainGraph.basicNodeTree$,
         mainDrawTreeElements$: mainGraph.mergedDrawTree$.pipe(map(normalDrawTreeMap)),
@@ -420,7 +425,7 @@
         depthFirst(allDrawTrees.find(t => !t.parent), e => e.moveFromPreviousPositionToNewPosition());
       },
 
-      async acceptNewNodeRevision({nodeId, text}) {
+      acceptNewNodeRevision({nodeId, text}) {
         // First check if we have that node, if we don't who cares
         const thatNode = this.nodes$.find(n => n.id === nodeId);
 
@@ -430,10 +435,10 @@
         }
         thatNode.text = text;
 
-        if (thatNode === this.editingNode$) {
+/*        if (thatNode === this.editingNode$) {
           console.log('Node updated is node being edited, setting content');
           this.content = text;
-        }
+        }*/
       },
       acceptNewEdgeRevision({previousEdges, n1, n2}) {
         console.log('Accepting edge revision ', previousEdges, n1, n2);
@@ -480,7 +485,10 @@
         if (this.dragOverRoot) {
           this.changeNodeParent(node);
         } else {
-          this.changeNodeParent(node, this.nodes$.find(n => n.id + "" === this.elementUnderNodeBeingDragged.id));
+          // Stop trees from being placed over themselves
+          if (node.id + "" !== this.elementUnderNodeBeingDragged.id) {
+            this.changeNodeParent(node, this.nodes$.find(n => n.id + "" === this.elementUnderNodeBeingDragged.id));
+          }
         }
       },
       /**
@@ -642,6 +650,7 @@
         // Get graphs, create a tree out of them
         n.loading$.next(true);
         const resultSets = await r.fetchNodesBelow(n.id);
+        if (!resultSets.length) return;
         const root = resultSets.find(s => s.lft === 1);
         createChildrenFromSetOfVNestedSetsGraph(root, resultSets);
         const newNodes = [];
@@ -676,8 +685,7 @@
         n.loading$.next(false);
       },
       async exportJson() {
-        const v = JSON.stringify(this.mainDrawTreeBasicNodes$)
-        this.importText = v;
+        this.importText = JSON.stringify(this.root.toExportNodeTree());
       },
       async importJson() {
         const v = JSON.parse(this.importText);

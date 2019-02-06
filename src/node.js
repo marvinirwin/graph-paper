@@ -124,6 +124,15 @@ export class Node {
     return basicNode;
   }
 
+  toExportNodeTree() {
+    const exportNode = {
+      text: this.text,
+      parent: this.parent,
+      children: this.children.map(c => c.toExportNodeTree()),
+    }
+    return exportNode;
+  }
+
   /**
    * Creates the title of this node
    */
