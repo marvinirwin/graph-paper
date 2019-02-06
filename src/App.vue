@@ -287,7 +287,7 @@
           if (newText !== editing.text) {
             editing.text = newText;
             editing.computeTitle();
-            r.createNodeRevision(this.editingNode$);
+            r.createNodeRevision(node);
           }
         }
       });
