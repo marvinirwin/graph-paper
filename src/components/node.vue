@@ -11,10 +11,10 @@
          @dragstart="dragStart(drawTree.tree.node, $event)"
          draggable="true"
          :style="oldStyle"
+         v-html="$sanitize(drawTree.tree.node.title)"
          @click="$emit('click', $event)">
         <span style="position: absolute; top: -40px; align-self: center;">{{drawTree.tree.node.lastModified | mDate}}</span>
         <!--        <span>{{drawTree.x}}, {{drawTree.y}}, {{node.nodeId}}</span>-->
-        {{drawTree.tree.node.title}}
         <!--        <div class="node new-node"
                      :class="{'show': showButtons}"
                      @click.stop="$emit('createChild', node)">+
