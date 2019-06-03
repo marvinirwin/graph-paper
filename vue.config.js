@@ -1,4 +1,5 @@
 module.exports = {
+  publicPath: 'https://marvinirwin.com/graph-paper',
   devServer: {
     proxy: {
       '/api': {
